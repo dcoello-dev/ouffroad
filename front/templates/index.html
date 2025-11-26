@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ouffroad</title>
+    <link rel="icon" type="image/png" href="/static/logo.png">
+    <link rel="shortcut icon" type="image/png" href="/static/logo.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script>
+        window.REPO_BASE_URL = "{{ repo_base_url }}";
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">☰</button>
+        <div class="sidebar" id="sidebar">
+            <div class="resizer" id="resizer"></div>
+            <div class="logo-container">
+                <img src="/static/logo.png" alt="Ouffroad" class="logo">
+            </div>
+            <div class="upload-section">
+                <select id="categorySelect" class="category-select">
+                    <option value="trail">Trail</option>
+                    <option value="enduro">Enduro</option>
+                    <option value="special_events">Eventos</option>
+                    <option value="media">Media</option>
+                </select>
+                <input type="file" id="gpxInput" multiple
+                    accept=".gpx,.fit,.kml,.kmz,.jpg,.jpeg,.png,.mp4,.mov,.avi,.mkv" class="file-input">
+                <div class="manual-location" id="manualLocation" style="display: none;">
+                    <p class="location-instruction">Haz clic en el mapa para seleccionar la ubicación o ingresa las
+                        coordenadas manualmente:</p>
+                    <input type="number" id="latitudeInput" placeholder="Latitud (ej. 40.7128)" step="any">
+                    <input type="number" id="longitudeInput" placeholder="Longitud (ej. -74.0060)" step="any">
+                </div>
+                <button onclick="uploadGPX()" class="upload-btn">Upload</button>
+            </div>
+            <div id="trackList" class="track-list"></div>
+        </div>
+        <div class="main-content">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="/static/js/main.js?v=19"></script>
+</body>
+
+</html>

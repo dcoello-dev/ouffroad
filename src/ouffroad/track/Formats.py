@@ -1,0 +1,2 @@
+GPX = "gpx"
+FIT = "fit"

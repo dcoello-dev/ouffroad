@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+gpxpy
+python-multipart
+jinja2
+requests
+fitparse
+Pillow
+garminconnect
+pydantic # For configuration models
+toml # For parsing TOML config files

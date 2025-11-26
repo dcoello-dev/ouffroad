@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling==1.11.1"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ouffroad"
+version = "0.1.0"
+description = "GPX Track Manager and Visualizer"
+authors = [
+  { name="dcoello-dev", email="dcpulido91@gmail.com" },
+]
+# readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "gpxpy",
+    "python-multipart",
+    "jinja2",
+    "requests",
+    "fitparse",
+    "Pillow",
+    "garminconnect",
+]
+
+[project.scripts]
+ouffroad = "ouffroad.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ouffroad"]
+force-include = {"front/" = "ouffroad/front/"}
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.version]
+path = "src/ouffroad/_init_.py"
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "httpx",  # Useful for testing FastAPI endpoints
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "src"
+]
