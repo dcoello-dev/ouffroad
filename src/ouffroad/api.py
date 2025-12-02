@@ -134,3 +134,11 @@ async def update_media_location(
         filename, location.latitude, location.longitude
     )
     return {"message": "Location updated successfully"}
+
+
+@router.get("/config")
+async def get_config(
+    app_config: Annotated[OuffroadConfig, Depends(get_app_config)],
+):
+    """Get public application configuration."""
+    return {"repo_base_url": f"/{app_config.repository_path.name}"}
