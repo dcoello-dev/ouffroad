@@ -13,10 +13,16 @@ import L from "leaflet";
 import { Media } from "../models/File";
 import type { IFile } from "../models/File";
 import { ApiService } from "../services/ApiService";
-import { GeoJsonFeatureCollection } from "../models/GeoJson";
+import type { GeoJsonFeatureCollection } from "../models/GeoJson";
 
+// Fix for default marker icon in Leaflet with Webpack/Vite
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
+// @ts-ignore
 const DefaultIcon = L.icon({
   iconUrl: icon,
+  // @ts-ignore
   shadowUrl: iconShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
