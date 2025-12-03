@@ -1,13 +1,14 @@
 import os
 import uvicorn
 import logging
+import logging.handlers
 import argparse  # Added import
 import pathlib  # Added import
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+
 
 from .api import router as api_router
 from .core.exceptions import OuffroadException, MetadataError
@@ -73,15 +74,11 @@ def create_app(config: OuffroadConfig | None = None) -> FastAPI:
             content=content,
         )
 
-    # Initialize OuffroadConfig if not provided
+    # Mount the repository path dynamically
     if config is None:
-        # Default fallback or error, but for main execution it will be passed
-        # This path is mostly for when create_app is called without args (e.g. tests might pass it)
-        # But in main() we parse args.
         pass
     else:
         app.state.config = config
-        # Mount the repository path dynamically
         if config.repository_path.exists():
             app.mount(
                 f"/{config.repository_path.name}",
@@ -89,22 +86,43 @@ def create_app(config: OuffroadConfig | None = None) -> FastAPI:
                 name=config.repository_path.name,
             )
 
-    app.mount("/static", StaticFiles(directory="front/static"), name="static")
+    # Serve React Frontend
+    # Resolve paths relative to the package installation directory
+    base_dir = pathlib.Path(__file__).resolve().parent
+    front_dir = base_dir / "front"
 
-    templates = Jinja2Templates(directory="front/templates")
-    app.include_router(api_router, prefix="/api")
-
-    @app.get("/")
-    async def read_root(request: Request):
-        # Determine the repository base URL
-        # If config is present and path exists, it's mounted at /{dir_name}
-        repo_base_url = "/uploads"  # Default fallback
-        if app.state.config and app.state.config.repository_path.exists():
-            repo_base_url = f"/{app.state.config.repository_path.name}"
-
-        return templates.TemplateResponse(
-            "index.html", {"request": request, "repo_base_url": repo_base_url}
+    # Check if front directory exists (it should in the installed package)
+    if not front_dir.exists():
+        # Fallback for local development if not installed as package
+        # Assuming we are running from src/ouffroad
+        # We need to go up to project root and find front/app/dist
+        project_root = base_dir.parent.parent
+        front_dir = project_root / "front" / "app" / "dist"
+        logger.warning(
+            f"Front dir not found in package, falling back to dev path: {front_dir}"
         )
+
+    if front_dir.exists():
+        # Mount assets folder
+        assets_dir = front_dir / "assets"
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+        # Serve index.html for root and any other unknown routes (SPA fallback)
+        from fastapi.responses import FileResponse
+
+        @app.get("/")
+        async def read_root():
+            return FileResponse(front_dir / "index.html")
+
+        # Optional: Catch-all for SPA routing if you use client-side routing
+        # @app.exception_handler(404)
+        # async def not_found(request, exc):
+        #     return FileResponse(front_dir / "index.html")
+    else:
+        logger.error(f"Frontend directory not found at {front_dir}")
+
+    app.include_router(api_router, prefix="/api")
 
     return app
 

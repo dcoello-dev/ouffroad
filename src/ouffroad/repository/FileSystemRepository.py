@@ -47,6 +47,8 @@ class FileSystemRepository(ITrackRepository):
         category_config: Optional[CategoryConfig] = (
             self.app_config.repository_config.categories.get(category)
         )
+
+        current_policy: IStoragePolicy
         if not category_config:
             # Default to DateBasedPolicy if category not explicitly defined in config
             current_policy = DateBasedPolicy()
