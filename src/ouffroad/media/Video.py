@@ -49,25 +49,6 @@ class Video(IMedia):
             logger.exception(f"Error saving video {self.path_}")
             return False
 
-    def save_metadata(self, latitude: float, longitude: float) -> bool:
-        """Save location metadata to sidecar JSON."""
-        try:
-            sidecar_path = pathlib.Path(str(self.path_) + ".json")
-            metadata = {
-                "latitude": latitude,
-                "longitude": longitude,
-                "date": datetime.now().isoformat(),
-            }
-
-            with open(sidecar_path, "w") as f:
-                json.dump(metadata, f, indent=2)
-
-            self.metadata_ = metadata
-            return True
-        except Exception:
-            logger.exception(f"Error saving video metadata {self.path_}")
-            return False
-
     def date(self) -> Optional[datetime]:
         """Extract date from metadata or fallback to file modification time."""
         if self.metadata_ and "date" in self.metadata_:

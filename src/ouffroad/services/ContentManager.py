@@ -71,8 +71,8 @@ class ContentManager:
         self, rel_path: str, latitude: float, longitude: float
     ) -> bool:
         """
-        Update location for a video file via sidecar JSON.
-        Only applicable to video files.
+        Update location for a media file via sidecar JSON.
+        Applicable to all media files (photos and videos).
         """
         files = self.repo.get(rel_path)
         if not files:
@@ -80,10 +80,10 @@ class ContentManager:
 
         file = files[0]  # Should only be one file
 
-        # Only videos support manual location updates
-        from ouffroad.media.Video import Video
+        # All IMedia instances support manual location updates via sidecar
+        from ouffroad.media.IMedia import IMedia
 
-        if isinstance(file, Video):
+        if isinstance(file, IMedia):
             return file.save_metadata(latitude, longitude)
         else:
-            raise ValueError("Only videos support manual location updates")
+            raise ValueError("Only media files support manual location updates")

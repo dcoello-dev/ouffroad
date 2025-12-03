@@ -74,7 +74,9 @@ def temp_repo(base_ouffroad_config) -> tuple[FileSystemRepository, pathlib.Path]
 
 
 @pytest.fixture
-def custom_policy_repo(tmp_path) -> tuple[FileSystemRepository, pathlib.Path]:
+def custom_policy_repo(
+    tmp_path, monkeypatch
+) -> tuple[FileSystemRepository, pathlib.Path]:
     """Create a repository with a custom policy."""
     repo_root = tmp_path / "custom_repo_root"
     repo_root.mkdir(exist_ok=True)
@@ -123,7 +125,11 @@ def custom_policy_repo(tmp_path) -> tuple[FileSystemRepository, pathlib.Path]:
             policy_config_arg
         )  # Pass the argument to original
 
-    repo._get_storage_policy_instance = Mock(side_effect=patched_get_policy_instance)
+    monkeypatch.setattr(
+        repo,
+        "_get_storage_policy_instance",
+        Mock(side_effect=patched_get_policy_instance),
+    )
 
     return repo, repo_root
 

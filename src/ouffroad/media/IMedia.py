@@ -1,8 +1,13 @@
 import pathlib
+import json
+import logging
 from typing import Optional, Dict, Any
+from datetime import datetime
 
 
 from ouffroad.core.IFile import IFile
+
+logger = logging.getLogger(__name__)
 
 
 class IMedia(IFile):
@@ -21,3 +26,22 @@ class IMedia(IFile):
         ):
             return (self.metadata_["latitude"], self.metadata_["longitude"])
         return None
+
+    def save_metadata(self, latitude: float, longitude: float) -> bool:
+        """Save location metadata to sidecar JSON."""
+        try:
+            sidecar_path = pathlib.Path(str(self.path_) + ".json")
+            metadata = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "date": datetime.now().isoformat(),
+            }
+
+            with open(sidecar_path, "w") as f:
+                json.dump(metadata, f, indent=2)
+
+            self.metadata_ = metadata
+            return True
+        except Exception:
+            logger.exception(f"Error saving metadata for {self.path_}")
+            return False
