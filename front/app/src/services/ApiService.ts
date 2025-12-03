@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Track, Media } from "../models/File";
 import type { IFile } from "../models/File";
-import { GeoJsonFeatureCollection } from "../models/GeoJson";
+import type { GeoJsonFeatureCollection } from "../models/GeoJson";
 
 export class ApiService {
   private static instance: ApiService;
@@ -59,9 +59,23 @@ export class ApiService {
         category === "media" || category === "fotos" || category === "videos";
 
       if (isMedia) {
-        files.push(new Media({ filename: path, fullPath: path, category }));
+        files.push(
+          new Media({
+            filename: path,
+            fullPath: path,
+            category,
+            type: "media",
+          }),
+        );
       } else {
-        files.push(new Track({ filename: path, fullPath: path, category }));
+        files.push(
+          new Track({
+            filename: path,
+            fullPath: path,
+            category,
+            type: "track",
+          }),
+        );
       }
     });
 
