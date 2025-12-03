@@ -27,7 +27,6 @@ dependencies = [
     "requests",
     "fitparse",
     "Pillow",
-    "garminconnect",
 ]
 
 [project.scripts]
@@ -35,7 +34,10 @@ ouffroad = "ouffroad.__main__:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ouffroad"]
-force-include = {"front/" = "ouffroad/front/"}
+force-include = {"front/app/dist" = "ouffroad/front"}
+
+[tool.hatch.build.hooks.custom]
+path = "scripts/hatch_build.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
