@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { ApiService } from './services/ApiService';
-import type { IFile } from './models/File';
-import { MapComponent } from './components/Map';
-import { Sidebar } from './components/Sidebar';
-import './index.css';
+import { useEffect, useState } from "react";
+import { ApiService } from "./services/ApiService";
+import type { IFile } from "./models/File";
+import { MapComponent } from "./components/Map";
+import { Sidebar } from "./components/Sidebar";
+import "./index.css";
 
 function App() {
   const [files, setFiles] = useState<IFile[]>([]);
@@ -27,10 +27,10 @@ function App() {
   }, []);
 
   const handleToggle = (file: IFile) => {
-    setActiveFiles(prev => {
-      const exists = prev.some(f => f.fullPath === file.fullPath);
+    setActiveFiles((prev) => {
+      const exists = prev.some((f) => f.fullPath === file.fullPath);
       if (exists) {
-        return prev.filter(f => f.fullPath !== file.fullPath);
+        return prev.filter((f) => f.fullPath !== file.fullPath);
       } else {
         return [...prev, file];
       }
@@ -41,12 +41,16 @@ function App() {
     if (!pickingLocation) return;
 
     try {
-      await ApiService.getInstance().updateMediaLocation(pickingLocation, lat, lng);
-      alert('Ubicación actualizada. Recarga la página para ver los cambios.');
+      await ApiService.getInstance().updateMediaLocation(
+        pickingLocation,
+        lat,
+        lng,
+      );
+      alert("Ubicación actualizada. Recarga la página para ver los cambios.");
       setPickingLocation(null);
     } catch (error) {
-      console.error('Error updating location:', error);
-      alert('Error al actualizar la ubicación');
+      console.error("Error updating location:", error);
+      alert("Error al actualizar la ubicación");
       setPickingLocation(null);
     }
   };
@@ -62,7 +66,14 @@ function App() {
       />
       <div className="main-content">
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
             Loading...
           </div>
         ) : (

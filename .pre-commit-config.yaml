@@ -35,3 +35,25 @@ repos:
             "types-Pillow",
             "types-toml",
         ]
+
+-   repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0 # Use a recent stable version
+    hooks:
+    -   id: prettier
+        types: [file]
+        files: '^front/app/.*\.(js|jsx|ts|tsx|css|html|json|yaml|yml|md)$' # Target files within front/app
+        args: [--write]
+        description: 'Format frontend files with Prettier.'
+
+# -   repo: local
+#     hooks:
+#     -   id: eslint
+#         name: eslint (front/app)
+#         entry: bash -c 'cd front/app && npm install --prefix . && npm run lint'
+#         language: system
+#         types: [file]
+#         files: '^front/app/.*\.(js|jsx|ts|tsx)$'
+#         pass_filenames: false
+#         always_run: true
+#         verbose: true
+#         require_serial: true # Ensure npm install completes before running lint
