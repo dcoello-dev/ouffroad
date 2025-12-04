@@ -144,3 +144,26 @@ dmypy.json
 temp_garmin/
 .env
 .env.local
+
+# Frontend / Node.js
+front/app/node_modules/
+front/app/dist/
+front/app/.vite/
+
+# Test reports and coverage
+front/app/coverage/
+front/app/playwright-report/
+front/app/test-results/
+front/app/.vitest/
+htmlcov/
+.coverage
+coverage/
+
+# Playwright
+front/app/.playwright/
+*.webm
+*.mp4
+trace.zip
+
+# Test repository (created by run_all_tests.sh)
+.test_repository/
