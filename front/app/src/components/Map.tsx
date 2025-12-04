@@ -213,6 +213,17 @@ const GeoJsonLayer = ({
 };
 
 function getColor(category?: string): string {
+  if (!category) return "blue";
+
+  // Try to get color from configuration
+  const categories = ApiService.getInstance().getCategories();
+  const categoryConfig = categories[category];
+
+  if (categoryConfig?.color) {
+    return categoryConfig.color;
+  }
+
+  // Fallback to hardcoded defaults for backward compatibility
   switch (category) {
     case "enduro":
       return "red";
