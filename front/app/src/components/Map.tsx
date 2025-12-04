@@ -36,6 +36,7 @@ interface MapProps {
   activeFiles: IFile[];
   pickingLocationFor: string | null;
   onLocationPicked: (lat: number, lng: number) => void;
+  hoveredTrackIds: string[];
 }
 
 // Component to handle map clicks for location picking
@@ -67,7 +68,13 @@ const MapClickHandler = ({
   return null;
 };
 
-const GeoJsonLayer = ({ file }: { file: IFile }) => {
+const GeoJsonLayer = ({
+  file,
+  isHovered,
+}: {
+  file: IFile;
+  isHovered: boolean;
+}) => {
   const [data, setData] = useState<GeoJsonFeatureCollection | null>(null);
   const [error, setError] = useState<boolean>(false);
   const map = useMap();
@@ -197,7 +204,10 @@ const GeoJsonLayer = ({ file }: { file: IFile }) => {
   return (
     <GeoJSON
       data={data}
-      style={{ color: getColor(file.category), weight: 2 }}
+      style={{
+        color: isHovered ? "#00FFFF" : getColor(file.category),
+        weight: isHovered ? 6 : 2,
+      }}
     />
   );
 };
@@ -217,6 +227,7 @@ export const MapComponent: React.FC<MapProps> = ({
   activeFiles,
   pickingLocationFor,
   onLocationPicked,
+  hoveredTrackIds,
 }) => {
   return (
     <MapContainer
@@ -266,7 +277,11 @@ export const MapComponent: React.FC<MapProps> = ({
         </BaseLayer>
       </LayersControl>
       {activeFiles.map((file) => (
-        <GeoJsonLayer key={file.fullPath} file={file} />
+        <GeoJsonLayer
+          key={file.fullPath}
+          file={file}
+          isHovered={hoveredTrackIds.includes(file.fullPath)}
+        />
       ))}
     </MapContainer>
   );

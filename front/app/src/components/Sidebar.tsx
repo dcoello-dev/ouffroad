@@ -9,6 +9,7 @@ interface SidebarProps {
   onToggle: (file: IFile) => void;
   onUploadComplete: () => void;
   onSetLocationRequest: (filePath: string) => void;
+  onHover: (ids: string[]) => void;
 }
 
 interface TreeNode {
@@ -77,6 +78,7 @@ interface TreeNodeProps {
   activeFiles: IFile[];
   onToggle: (file: IFile) => void;
   onSetLocationRequest: (filePath: string) => void;
+  onHover: (ids: string[]) => void;
   level: number;
 }
 
@@ -85,6 +87,7 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
   activeFiles,
   onToggle,
   onSetLocationRequest,
+  onHover,
   level,
 }) => {
   const [isOpen, setIsOpen] = useState(level === 0); // Open top level by default
@@ -147,7 +150,15 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
 
   return (
     <div className={containerClass}>
-      <div className={headerClass} onClick={toggleOpen}>
+      <div
+        className={headerClass}
+        onClick={toggleOpen}
+        onMouseEnter={() => {
+          const ids = allNodeFiles.map((f) => f.fullPath);
+          onHover(ids);
+        }}
+        onMouseLeave={() => onHover([])}
+      >
         <div style={{ display: "flex", alignItems: "center" }}>
           <span className={`chevron ${!isOpen ? "collapsed" : ""}`}>▼</span>
           <input
@@ -192,6 +203,7 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                 activeFiles={activeFiles}
                 onToggle={onToggle}
                 onSetLocationRequest={onSetLocationRequest}
+                onHover={onHover}
                 level={level + 1}
               />
             ))}
@@ -221,6 +233,8 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                   display: "flex",
                   alignItems: "center",
                 }}
+                onMouseEnter={() => onHover([file.fullPath])}
+                onMouseLeave={() => onHover([])}
               >
                 <input
                   type="checkbox"
@@ -286,6 +300,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggle,
   onUploadComplete,
   onSetLocationRequest,
+  onHover,
 }) => {
   const tree = buildTree(files);
   const [sidebarWidth, setSidebarWidth] = useState(320);
@@ -363,6 +378,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             activeFiles={activeFiles}
             onToggle={onToggle}
             onSetLocationRequest={onSetLocationRequest}
+            onHover={onHover}
             level={0}
           />
         ))}
