@@ -87,8 +87,19 @@ class OuffroadConfig(BaseModel):
                     f"Error loading repository config from {config_file_path}: {e}"
                 )
         else:
-            # If no config file exists, use an empty default config
-            self.repository_config = RepositoryConfig()
+            # If no config file exists, use default configuration matching original frontend
             logger.warning(
-                f"No repository config file found at {config_file_path}. Using default empty configuration."
+                f"No repository config file found at {config_file_path}. Using default configuration."
+            )
+            self.repository_config = RepositoryConfig(
+                categories={
+                    "tracks": CategoryConfig(
+                        name="tracks", type="track", extensions=[".gpx", ".fit", ".kml"]
+                    ),
+                    "media": CategoryConfig(
+                        name="media",
+                        type="media",
+                        extensions=[".jpg", ".jpeg", ".png", ".mp4", ".mov"],
+                    ),
+                }
             )

@@ -162,7 +162,20 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
             onClick={(e) => e.stopPropagation()}
             style={{ margin: "0 10px", cursor: "pointer" }}
           />
-          <span>{node.name.toUpperCase()}</span>
+          <span>
+            {(() => {
+              const categories = ApiService.getInstance().getCategories();
+              const config = categories[node.name];
+              if (config && config.label) {
+                return config.label;
+              }
+              // Fallback to formatted folder name
+              return (
+                node.name.charAt(0).toUpperCase() +
+                node.name.slice(1).replace(/_/g, " ")
+              );
+            })()}
+          </span>
         </div>
         <span className="group-count">{totalFiles}</span>
       </div>
@@ -278,14 +291,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Custom sort order for categories if needed, or just alphabetical
+  // Sort categories: Tracks first, then Media, then alphabetical
   const sortedCategories = Object.values(tree).sort((a, b) => {
-    const order = ["trail", "enduro", "special_events", "media"];
-    const idxA = order.indexOf(a.name.toLowerCase());
-    const idxB = order.indexOf(b.name.toLowerCase());
-    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-    if (idxA !== -1) return -1;
-    if (idxB !== -1) return 1;
+    const categories = ApiService.getInstance().getCategories();
+    const catA = categories[a.name];
+    const catB = categories[b.name];
+
+    // If both have config, sort by type
+    if (catA && catB) {
+      if (catA.type !== catB.type) {
+        return catA.type === "track" ? -1 : 1;
+      }
+    }
+
+    // If one has config and other doesn't (shouldn't happen for top level), prioritize config
+    if (catA && !catB) return -1;
+    if (!catA && catB) return 1;
+
+    // Default to alphabetical
     return a.name.localeCompare(b.name);
   });
 

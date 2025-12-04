@@ -13,6 +13,25 @@ export const Upload: React.FC<UploadProps> = ({ onUploadComplete }) => {
   const [latitude, setLatitude] = useState<string>("");
   const [longitude, setLongitude] = useState<string>("");
 
+  const [categories, setCategories] = useState<Record<string, any>>({});
+
+  React.useEffect(() => {
+    const loadCategories = async () => {
+      console.log("[Upload] Waiting for config...");
+      await ApiService.getInstance().ensureConfigLoaded();
+      const cats = ApiService.getInstance().getCategories();
+      console.log("[Upload] Got categories:", cats);
+      setCategories(cats);
+      // Set default category to first available if current is not in list
+      if (Object.keys(cats).length > 0 && !cats[category]) {
+        const firstCat = Object.keys(cats)[0];
+        console.log("[Upload] Setting default category:", firstCat);
+        setCategory(firstCat);
+      }
+    };
+    loadCategories();
+  }, []);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     setSelectedFiles(files);
@@ -67,6 +86,13 @@ export const Upload: React.FC<UploadProps> = ({ onUploadComplete }) => {
     }
   };
 
+  console.log(
+    "[Upload] Rendering with categories:",
+    categories,
+    "Keys:",
+    Object.keys(categories),
+  );
+
   return (
     <div className="upload-section">
       <select
@@ -74,10 +100,16 @@ export const Upload: React.FC<UploadProps> = ({ onUploadComplete }) => {
         onChange={(e) => setCategory(e.target.value)}
         className="category-select"
       >
-        <option value="trail">Trail</option>
-        <option value="enduro">Enduro</option>
-        <option value="special_events">Eventos</option>
-        <option value="media">Media</option>
+        {Object.keys(categories).length > 0 ? (
+          Object.keys(categories).map((cat) => (
+            <option key={cat} value={cat}>
+              {categories[cat].label ||
+                cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, " ")}
+            </option>
+          ))
+        ) : (
+          <option value="loading">Loading categories...</option>
+        )}
       </select>
 
       <input

@@ -13,6 +13,7 @@ function App() {
 
   const loadFiles = async () => {
     try {
+      await ApiService.getInstance().ensureConfigLoaded();
       const fetchedFiles = await ApiService.getInstance().getTracks();
       setFiles(fetchedFiles);
     } catch (error) {
