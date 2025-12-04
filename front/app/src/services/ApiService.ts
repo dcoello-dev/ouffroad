@@ -9,6 +9,8 @@ export class ApiService {
   private repoBaseUrl: string = "/uploads"; // Default fallback
   private configPromise: Promise<void>;
 
+  private categories: Record<string, any> = {};
+
   private constructor() {
     this.configPromise = this.fetchConfig();
   }
@@ -22,6 +24,19 @@ export class ApiService {
         this.repoBaseUrl = response.data.repo_base_url;
         console.log("[ApiService] Set repoBaseUrl to:", this.repoBaseUrl);
       }
+      if (response.data.categories) {
+        this.categories = response.data.categories;
+        console.log("[ApiService] Loaded categories:", this.categories);
+        console.log(
+          "[ApiService] Categories keys:",
+          Object.keys(this.categories),
+        );
+      } else {
+        console.warn(
+          "[ApiService] No categories found in config response:",
+          response.data,
+        );
+      }
     } catch (error) {
       console.error("[ApiService] Failed to fetch config", error);
     }
@@ -33,6 +48,10 @@ export class ApiService {
 
   public getRepoBaseUrl(): string {
     return this.repoBaseUrl;
+  }
+
+  public getCategories(): Record<string, any> {
+    return this.categories;
   }
 
   public static getInstance(): ApiService {

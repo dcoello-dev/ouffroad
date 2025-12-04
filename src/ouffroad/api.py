@@ -141,4 +141,17 @@ async def get_config(
     app_config: Annotated[OuffroadConfig, Depends(get_app_config)],
 ):
     """Get public application configuration."""
-    return {"repo_base_url": f"/{app_config.repository_path.name}"}
+    categories = {}
+    if app_config.repository_config:
+        categories = {
+            name: {
+                "type": conf.type,
+                "extensions": conf.extensions,
+                "label": conf.name,  # Expose the configured name as label
+            }
+            for name, conf in app_config.repository_config.categories.items()
+        }
+    return {
+        "repo_base_url": f"/{app_config.repository_path.name}",
+        "categories": categories,
+    }
