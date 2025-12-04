@@ -10,6 +10,7 @@ function App() {
   const [activeFiles, setActiveFiles] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [pickingLocation, setPickingLocation] = useState<string | null>(null);
+  const [hoveredTrackIds, setHoveredTrackIds] = useState<string[]>([]);
 
   const loadFiles = async () => {
     try {
@@ -64,6 +65,7 @@ function App() {
         onToggle={handleToggle}
         onUploadComplete={loadFiles}
         onSetLocationRequest={setPickingLocation}
+        onHover={setHoveredTrackIds}
       />
       <div className="main-content">
         {loading ? (
@@ -82,6 +84,7 @@ function App() {
             activeFiles={activeFiles}
             pickingLocationFor={pickingLocation}
             onLocationPicked={handleLocationPicked}
+            hoveredTrackIds={hoveredTrackIds}
           />
         )}
       </div>
