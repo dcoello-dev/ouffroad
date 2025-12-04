@@ -37,15 +37,6 @@ def get_content_manager(
 # --- Routes ---
 
 
-# @router.post("/upload")
-# async def upload_gpx(
-#     file: UploadFile = File(...),
-#     category: str = Form(...),
-#     latitude: Optional[float] = Form(None), # Reverted to Optional, simpler
-#     longitude: Optional[float] = Form(None), # Reverted to Optional, simpler
-#     app_config: Annotated[OuffroadConfig, Depends(get_app_config)] = Depends(get_app_config),
-#     content_manager: Annotated[ContentManager, Depends(get_content_manager)] = Depends(get_content_manager),
-# ):
 @router.post("/upload")
 async def upload_gpx(
     app_config: Annotated[
@@ -148,6 +139,7 @@ async def get_config(
                 "type": conf.type,
                 "extensions": conf.extensions,
                 "label": conf.name,  # Expose the configured name as label
+                "color": conf.color,  # Expose the configured color
             }
             for name, conf in app_config.repository_config.categories.items()
         }

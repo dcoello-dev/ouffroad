@@ -38,6 +38,7 @@ class CategoryConfig(BaseModel):
         default_factory=list
     )  # e.g., [".gpx", ".fit"] or [".jpg", ".mp4"]
     storage_policy: StoragePolicyType = Field(default_factory=DateBasedPolicyConfig)
+    color: str = "blue"
 
 
 # --- Repository Configuration Model ---
@@ -94,12 +95,16 @@ class OuffroadConfig(BaseModel):
             self.repository_config = RepositoryConfig(
                 categories={
                     "tracks": CategoryConfig(
-                        name="tracks", type="track", extensions=[".gpx", ".fit", ".kml"]
+                        name="tracks",
+                        type="track",
+                        extensions=[".gpx", ".fit", ".kml"],
+                        color="red",
                     ),
                     "media": CategoryConfig(
                         name="media",
                         type="media",
                         extensions=[".jpg", ".jpeg", ".png", ".mp4", ".mov"],
+                        color="blue",
                     ),
                 }
             )
