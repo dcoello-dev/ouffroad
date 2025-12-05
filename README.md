@@ -1,155 +1,127 @@
-# Ouffroad - Gestión de Rutas y Multimedia
+# Ouffroad - Your Personal GPX & Media Manager
 
-## Descripción del Proyecto
+Ouffroad is a powerful self-hosted application for managing, visualizing, and organizing your GPS tracks (GPX, FIT) and associated media (photos, videos). It helps you keep your outdoor adventures organized with a beautiful map-based interface.
 
-`Ouffroad` es un backend desarrollado en Python con FastAPI diseñado para la gestión y visualización de rutas GPS (en formatos como GPX y FIT) y archivos multimedia asociados (fotografías JPG y vídeos MP4). Ofrece una API RESTful robusta para la subida, procesamiento, almacenamiento y consulta de estos datos, facilitando su integración con aplicaciones frontend.
+## 🚀 Getting Started
 
-## Características Principales
+### Installation
 
-*   **Subida Flexible**: Permite la carga de ficheros GPX, FIT, JPG y MP4 a través de un único endpoint.
-*   **Extracción de Metadatos**: Procesa automáticamente los metadatos de los archivos (ej. datos EXIF de fotos, información de tracks GPS).
-*   **Almacenamiento Estructurado**: Organiza los ficheros en el sistema de almacenamiento según políticas configurables (ej. basado en fechas).
-*   **API GeoJSON**: Proporciona una interfaz para obtener la representación GeoJSON de tracks y puntos multimedia.
-*   **Manejo de Errores Robusto**: Implementa una jerarquía de excepciones personalizada y un manejador centralizado para ofrecer respuestas claras y predecibles.
-
-## Arquitectura y Tecnologías
-
-El backend está construido sobre una **arquitectura en capas** bien definida, que separa claramente las responsabilidades:
-*   **Capa de API**: Implementada con FastAPI, gestiona las solicitudes HTTP y las respuestas.
-*   **Capa de Servicios**: Contiene la lógica de negocio y orquesta las operaciones.
-*   **Capa de Repositorio**: Abstrae el acceso a los datos, permitiendo almacenar en el sistema de ficheros.
-*   **Modelos de Dominio**: Define las entidades clave del negocio (`ITrack`, `IMedia`) y sus implementaciones concretas.
-
-**Tecnologías clave:**
-*   **Python 3.12+**
-*   **FastAPI**: Framework web de alto rendimiento.
-*   **Uvicorn**: Servidor ASGI para ejecutar la aplicación FastAPI.
-*   **Pillow**: Para el procesamiento de imágenes (EXIF).
-*   **gpxpy, fitparse**: Librerías para el parseo de ficheros GPX y FIT.
-*   **Jinja2Templates**: Para el renderizado del frontend básico.
-
-## Configuración del Entorno de Desarrollo
-
-Sigue estos pasos para poner el proyecto en marcha:
-
-1.  **Clonar el Repositorio:**
+1.  **Clone the repository:**
     ```bash
-    git clone [URL_DE_TU_REPOSITORIO]
+    git clone https://github.com/yourusername/ouffroad.git
     cd ouffroad
     ```
-2.  **Crear y Activar un Entorno Virtual:**
-    Es altamente recomendable usar un entorno virtual para gestionar las dependencias del proyecto.
+
+2.  **Set up the environment:**
+    We recommend using `uv` for fast Python package management, but `pip` works too.
+
     ```bash
-    python -m venv .venv
-    # En Linux/macOS:
+    # Using uv (Recommended)
+    pip install uv
+    uv venv
     source .venv/bin/activate
-    # En Windows:
-    .venv\Scripts\activate
-    ```
-3.  **Instalar Dependencias:**
-    Instala todas las librerías necesarias.
-    ```bash
-    pip install -r requirements.txt
-    ```
-    *(Asegúrate de que `requirements.txt` existe y está actualizado. Si no, puedes generarlo con `pip freeze > requirements.txt`)*
-
-4.  **Instalar y Configurar Pre-commit Hooks (Recomendado):**
-    Para asegurar la calidad del código y mantener un estilo consistente, se utiliza `pre-commit`.
-    ```bash
-    pip install pre-commit
-    pre-commit install
-    ```
-    Para ejecutar las comprobaciones en todos los ficheros existentes:
-    ```bash
-    pre-commit run --all-files
+    uv pip install -e .
     ```
 
-## Ejecutar la Aplicación
+    ```bash
+    # Using standard pip
+    python -m venv .venv
+    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+    pip install -e .
+    ```
 
-Para iniciar el servidor de desarrollo:
+3.  **Build the Frontend:**
+    ```bash
+    cd front/app
+    npm install
+    npm run build
+    cd ../..
+    ```
+
+### Running the Application
+
+Start the server pointing to your data repository:
 
 ```bash
-# Para activar el modo "reload" (recarga automática al cambiar código)
-# y especificar la ruta al repositorio (por defecto es 'uploads')
-# En Linux/macOS:
-ENV=development python -m src.ouffroad --repo mi_repositorio/
-# En Windows (CMD):
-set ENV=development
-python -m src.ouffroad --repo mi_repositorio/
-# En Windows (PowerShell):
-$env:ENV="development"
-python -m src.ouffroad --repo mi_repositorio/
-
-# Si no se especifica --repo, se usará el directorio 'uploads' por defecto.
-
-# Sin modo "reload" (para producción):
-python -m src.ouffroad --repo mi_repositorio/
+uv run ouffroad --repo /path/to/your/data
 ```
-La aplicación estará disponible en `http://0.0.0.0:8000`.
 
-## Configuración del Repositorio
+Open your browser at `http://localhost:8000`.
 
-`Ouffroad` utiliza un sistema de configuración centralizado que permite definir las categorías de archivos y sus políticas de almacenamiento. Esta configuración se lee desde un fichero `storage.toml` que debe estar en la raíz del directorio especificado como repositorio (por ejemplo, `mi_repositorio/storage.toml`).
+---
 
-### Estructura de `storage.toml`
+## 📖 How to Use Ouffroad
 
-El fichero `storage.toml` define las diferentes categorías de almacenamiento (ej. "trail", "media") y, para cada una, el tipo de contenido que acepta (`track` o `media`), las extensiones de archivo asociadas y la política de almacenamiento que se debe aplicar.
+### 1. Uploading Files
+- Click the **"Upload"** button in the sidebar.
+- Drag and drop GPX, FIT, JPG, or MP4 files.
+- Select a category (e.g., "Trail", "Enduro").
+- Files are automatically processed and organized based on their date.
 
-Ejemplo de `storage.toml`:
+### 2. Organizing Your Library
+- **Drag & Drop**: Move files between categories or folders simply by dragging them in the sidebar.
+- **Rename**: Double-click any file name to rename it inline.
+- **Download**: Click the download icon next to any file to save it.
+
+### 3. Visualizing Data
+- **Map View**: All your tracks and geolocated photos appear on the map.
+- **Track Details**: Click a track to see elevation profiles and statistics.
+- **Media Viewer**: Click the 👁️ icon on photos/videos to open the immersive lightbox viewer.
+
+---
+
+## 📁 Creating a New Repository
+
+A repository is simply a folder where Ouffroad stores your files. It requires a `storage.toml` configuration file to tell Ouffroad how to organize things.
+
+### 1. Create a Folder
+Create a directory anywhere on your computer:
+```bash
+mkdir ~/my-adventures
+```
+
+### 2. Create `storage.toml`
+Create a file named `storage.toml` inside that folder with your category definitions:
 
 ```toml
+# ~/my-adventures/storage.toml
+
 [categories.trail]
-name = "trail"
+name = "Trail Riding"
 type = "track"
 extensions = [".gpx", ".fit"]
-storage_policy = { name = "DateBasedPolicy" } # Opcional, por defecto es DateBasedPolicy
+color = "gold"
+# DateBasedPolicy organizes files by Year/Month (e.g., 2024/01/track.gpx)
+storage_policy = { name = "DateBasedPolicy" }
+
+[categories.enduro]
+name = "Hard Enduro"
+type = "track"
+extensions = [".gpx"]
+color = "red"
+storage_policy = { name = "DateBasedPolicy" }
 
 [categories.media]
-name = "media"
+name = "Photos & Videos"
 type = "media"
-extensions = [".jpg", ".mp4", ".jpeg"]
-storage_policy = { name = "FlatPolicy" } # Ejemplo de otra política
+extensions = [".jpg", ".jpeg", ".png", ".mp4"]
+# FlatPolicy puts all files in one folder
+storage_policy = { name = "FlatPolicy" }
 ```
 
-Las políticas de almacenamiento disponibles son:
-*   `DateBasedPolicy`: Organiza los ficheros en subdirectorios por año/mes (ej. `categoría/año/mes/fichero.ext`).
-*   `FlatPolicy`: Guarda todos los ficheros de la categoría directamente en el directorio de la categoría (ej. `categoría/fichero.ext`).
-*   `ConfigurablePolicy`: Permite una configuración más avanzada (actualmente no implementada de forma genérica en el `.toml`).
+### 3. Run Ouffroad
+Launch Ouffroad pointing to your new repository:
 
-La estructura de esta configuración es validada internamente por modelos de `Pydantic`, asegurando la corrección de los datos.
+```bash
+uv run ouffroad --repo ~/my-adventures
+```
 
-## Endpoints de la API
+Ouffroad will automatically create the necessary folder structure as you upload files.
 
-Aquí tienes un resumen de los principales endpoints:
+---
 
-*   **`GET /`**: Accede al frontend básico de la aplicación.
-*   **`POST /api/upload`**: Sube ficheros de tracks o multimedia.
-    *   **Método**: `POST`
-    *   **Parámetros de formulario**: `file` (el archivo), `category` (ej. "trail", "media"), `latitude` (opcional), `longitude` (opcional).
-*   **`GET /api/tracks`**: Lista todos los tracks y elementos multimedia disponibles.
-*   **`GET /api/track/{filename:path}`**: Obtiene la representación GeoJSON de un track o elemento multimedia específico.
-    *   **Parámetros de ruta**: `filename` (ruta relativa del fichero, ej. "media/carba/IMG-20251012-WA0014.jpg").
+## 🛠️ Advanced Features
 
-## Estructura del Proyecto
-
-*   `src/ouffroad/`: Contiene todo el código fuente del backend.
-    *   `api.py`: Definición de las rutas de la API.
-    *   `services/`: Lógica de negocio.
-    *   `repository/`: Abstracción de la capa de datos.
-    *   `track/`: Implementaciones para tracks GPX/FIT.
-    *   `media/`: Implementaciones para fotos/vídeos.
-    *   `core/`: Excepciones base y otras utilidades.
-*   `front/`: Ficheros estáticos y plantillas del frontend básico.
-*   `uploads/`: Directorio donde se almacenan los archivos subidos.
-*   `tests/`: Tests unitarios y de integración.
-*   `.pre-commit-config.yaml`: Configuración para `pre-commit`.
-*   `requirements.txt`: Dependencias del proyecto.
-*   `pyproject.toml`: Configuración de herramientas y metadatos del proyecto.
-
-## Contribuciones
-
-¡Las contribuciones son bienvenidas! Por favor, consulta el fichero `AGENTS.md` para las directrices de contribución y cómo añadir nuevos "agentes" (ej. nuevos formatos de tracks o multimedia).
-
-## Licencia
-
-[Aquí puedes especificar la licencia, por ejemplo, MIT, Apache 2.0, etc.]
+- **Sidecar Files**: Metadata is stored in `.json` sidecar files next to your data, keeping your original files untouched.
+- **Atomic Operations**: Moves and renames are safe; if something goes wrong, changes are rolled back.
+- **GeoJSON API**: Developers can access raw data via the `/api` endpoints.
