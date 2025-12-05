@@ -89,11 +89,36 @@ html,
 }
 
 .logo-container {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 24px 20px;
   margin-bottom: 0;
   border-bottom: 2px solid var(--border-color);
   background: transparent;
+  position: relative;
+}
+
+.switch-repo-btn {
+  position: absolute;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: var(--transition);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.switch-repo-btn:hover {
+  background: var(--hover-bg);
+  color: var(--primary-light);
+  transform: rotate(180deg);
 }
 
 .logo-container h2 {

@@ -143,10 +143,90 @@ async def get_config(
             }
             for name, conf in app_config.repository_config.categories.items()
         }
+
+    # Use the dynamic route /files as base URL
+    # If no repo is configured, repo_base_url is None
+    repo_base_url = "/files" if app_config.repository_path else None
+
     return {
-        "repo_base_url": f"/{app_config.repository_path.name}",
+        "repo_base_url": repo_base_url,
         "categories": categories,
+        "repository_path": (
+            str(app_config.repository_path) if app_config.repository_path else None
+        ),
     }
+
+
+class RepositoryConfigRequest(BaseModel):
+    path: str
+
+
+@router.post("/config/repository")
+async def set_repository(
+    config_request: RepositoryConfigRequest,
+    app_config: Annotated[OuffroadConfig, Depends(get_app_config)],
+):
+    """Set or update the repository path."""
+    path = pathlib.Path(config_request.path)
+    if not path.exists() or not path.is_dir():
+        raise HTTPException(status_code=400, detail=f"Invalid repository path: {path}")
+
+    app_config.repository_path = path
+    # Reload config from the new repository
+    try:
+        app_config.load_repository_config()
+    except Exception as e:
+        # If loading config fails, we still set the path but warn
+        logger.warning(f"Failed to load config from new repository: {e}")
+
+    return {"message": "Repository updated", "path": str(path)}
+
+
+@router.get("/system/drives")
+async def list_drives():
+    """List available system drives/root directories."""
+    drives = []
+
+    if os.name == "nt":
+        # Windows implementation
+        import string
+        from ctypes import windll
+
+        # Get logical drives bitmask
+        try:
+            bitmask = windll.kernel32.GetLogicalDrives()
+            for letter in string.ascii_uppercase:
+                if bitmask & 1:
+                    drive_path = f"{letter}:\\"
+                    drives.append(
+                        {"path": drive_path, "name": f"Local Disk ({letter}:)"}
+                    )
+                bitmask >>= 1
+        except Exception:
+            # Fallback if ctypes fails
+            for letter in string.ascii_uppercase:
+                drive_path = f"{letter}:\\"
+                if os.path.exists(drive_path):
+                    drives.append(
+                        {"path": drive_path, "name": f"Local Disk ({letter}:)"}
+                    )
+    else:
+        # Linux/Unix implementation
+        roots = [pathlib.Path("/home"), pathlib.Path("/media"), pathlib.Path("/mnt")]
+
+        # Add current user home if available
+        try:
+            home = pathlib.Path.home()
+            if home not in roots:
+                roots.insert(0, home)
+        except Exception:
+            pass
+
+        for root in roots:
+            if root.exists():
+                drives.append({"path": str(root), "name": root.name or str(root)})
+
+    return {"drives": drives}
 
 
 # --- File Operations Models ---

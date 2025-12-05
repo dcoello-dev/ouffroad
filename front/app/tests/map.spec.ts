@@ -1,17 +1,32 @@
 import { test, expect } from "@playwright/test";
+import path from "path";
 
 test.describe("Map Component", () => {
-  test("should render map container", async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto("/");
 
+    // Check if we are in setup mode (RepositorySelector visible)
+    const isSetupMode = await page.isVisible(".repository-selector-card");
+    if (isSetupMode) {
+      // Resolve path to .test_repository
+      // Assuming we are running from front/app
+      const repoPath = path.resolve(process.cwd(), "../../.test_repository");
+
+      // Fill input and submit
+      await page.fill(
+        'input[placeholder="/path/to/your/repository"]',
+        repoPath,
+      );
+      await page.click('button[type="submit"]');
+    }
+  });
+  test("should render map container", async ({ page }) => {
     // Wait for map to load
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 10000 });
   });
 
   test("should display map controls", async ({ page }) => {
-    await page.goto("/");
-
     // Wait for map to load
     await page.waitForSelector(".leaflet-container", { timeout: 10000 });
 
@@ -25,8 +40,6 @@ test.describe("Map Component", () => {
   });
 
   test("should allow switching map layers", async ({ page }) => {
-    await page.goto("/");
-
     // Wait for map to load
     await page.waitForSelector(".leaflet-container", { timeout: 10000 });
 
@@ -45,8 +58,6 @@ test.describe("Map Component", () => {
   });
 
   test("should zoom in and out", async ({ page }) => {
-    await page.goto("/");
-
     // Wait for map to load
     await page.waitForSelector(".leaflet-container", { timeout: 10000 });
 
@@ -68,15 +79,34 @@ test.describe("Map Component", () => {
   });
 
   test("should handle track selection from sidebar", async ({ page }) => {
-    await page.goto("/");
-
     // Wait for both map and sidebar to load
     await page.waitForSelector(".leaflet-container", { timeout: 10000 });
     await page.waitForSelector(".track-list", { timeout: 5000 });
 
-    // Expand a category if needed
-    const categoryHeader = page.locator(".category-header").first();
-    await categoryHeader.click();
+    // Expand folders if needed
+    const yearHeader = page.locator(".year-header").first();
+    if (await yearHeader.isVisible()) {
+      await yearHeader.click();
+      const monthHeader = page.locator(".month-header").first();
+      if (await monthHeader.isVisible()) {
+        await monthHeader.click();
+      }
+    } else {
+      // Try expanding category if year not visible (though default is open)
+      const categoryHeader = page.locator(".category-header").first();
+      await categoryHeader.click();
+      await page.waitForTimeout(500);
+
+      // Now try year/month
+      const yearHeaderAfter = page.locator(".year-header").first();
+      if (await yearHeaderAfter.isVisible()) {
+        await yearHeaderAfter.click();
+        const monthHeader = page.locator(".month-header").first();
+        if (await monthHeader.isVisible()) {
+          await monthHeader.click();
+        }
+      }
+    }
     await page.waitForTimeout(500);
 
     // Find a track checkbox

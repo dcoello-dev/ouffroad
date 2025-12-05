@@ -56,8 +56,8 @@ class OuffroadConfig(BaseModel):
     Main application configuration, loaded from various sources.
     """
 
-    repository_path: pathlib.Path = Field(
-        ..., description="Path to the root of the data repository (e.g., 'uploads/')"
+    repository_path: Optional[pathlib.Path] = Field(
+        None, description="Path to the root of the data repository (e.g., 'uploads/')"
     )
     # The actual config loaded from repository_path/storage.toml
     repository_config: Optional[RepositoryConfig] = None
@@ -71,6 +71,9 @@ class OuffroadConfig(BaseModel):
         Loads the repository-specific configuration (e.g., storage.toml)
         from the repository_path.
         """
+        if self.repository_path is None:
+            return
+
         config_file_path = self.repository_path / "storage.toml"
         if config_file_path.exists():
             try:

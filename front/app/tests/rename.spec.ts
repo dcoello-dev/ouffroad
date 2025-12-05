@@ -1,9 +1,39 @@
 import { test, expect } from "@playwright/test";
+import path from "path";
 
 test.describe("File Rename Functionality", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
+
+    // Check if we are in setup mode (RepositorySelector visible)
+    const isSetupMode = await page.isVisible(".repository-selector-card");
+    if (isSetupMode) {
+      // Resolve path to .test_repository
+      // Assuming we are running from front/app
+      const repoPath = path.resolve(process.cwd(), "../../.test_repository");
+
+      // Fill input and submit
+      await page.fill(
+        'input[placeholder="/path/to/your/repository"]',
+        repoPath,
+      );
+      await page.click('button[type="submit"]');
+    }
+
     await page.waitForSelector(".sidebar");
+
+    // Expand folders to reveal files
+    try {
+      const yearHeader = page.locator(".year-header").first();
+      await yearHeader.waitFor({ state: "visible", timeout: 2000 });
+      await yearHeader.click();
+
+      const monthHeader = page.locator(".month-header").first();
+      await monthHeader.waitFor({ state: "visible", timeout: 2000 });
+      await monthHeader.click();
+    } catch (e) {
+      console.log("Could not expand folders:", e);
+    }
   });
 
   test("should show rename input on double-click", async ({ page }) => {

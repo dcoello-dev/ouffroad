@@ -11,6 +11,7 @@ interface SidebarProps {
   onUploadComplete: () => void;
   onSetLocationRequest: (filePath: string) => void;
   onHover: (ids: string[]) => void;
+  onChangeRepository: () => void;
 }
 
 interface DragState {
@@ -442,6 +443,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onUploadComplete,
   onSetLocationRequest,
   onHover,
+  onChangeRepository,
 }) => {
   const tree = buildTree(files);
   const [sidebarWidth, setSidebarWidth] = useState(320);
@@ -558,6 +560,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       />
       <div className="logo-container">
         <h2>Ouffroad</h2>
+        <button
+          onClick={onChangeRepository}
+          className="switch-repo-btn"
+          title="Switch Repository"
+        >
+          🔄
+        </button>
       </div>
       <Upload onUploadComplete={onUploadComplete} />
       <div className="track-list">

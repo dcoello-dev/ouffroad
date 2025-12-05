@@ -17,10 +17,13 @@ logger = logging.getLogger(__name__)
 class FileSystemRepository(ITrackRepository):
     def __init__(self, app_config: OuffroadConfig):
         self.app_config = app_config
-        self.base_path = self.app_config.repository_path
-        self.base_path.mkdir(parents=True, exist_ok=True)
+        self.base_path: Optional[pathlib.Path] = self.app_config.repository_path
+        if self.base_path:
+            self.base_path.mkdir(parents=True, exist_ok=True)
 
     def _get_absolute_path(self, rel_path: str) -> pathlib.Path:
+        if self.base_path is None:
+            raise ValueError("Repository not configured")
         return self.base_path / rel_path
 
     def _get_storage_policy_instance(
@@ -33,6 +36,8 @@ class FileSystemRepository(ITrackRepository):
             return FlatPolicy()
         elif policy_config.name == "ConfigurablePolicy":
             # ConfigurablePolicy needs its config file path; for now, assume default
+            if self.app_config.repository_path is None:
+                raise ValueError("Repository not configured")
             return ConfigurablePolicy(
                 self.app_config.repository_path / policy_config.config_file
             )
@@ -43,6 +48,9 @@ class FileSystemRepository(ITrackRepository):
         # Get category configuration
         if not self.app_config.repository_config:
             raise ValueError("Repository configuration not loaded.")
+
+        if self.base_path is None:
+            raise ValueError("Repository not configured")
 
         category_config: Optional[CategoryConfig] = (
             self.app_config.repository_config.categories.get(category)
@@ -86,6 +94,8 @@ class FileSystemRepository(ITrackRepository):
         file.path_ = target_path
 
         if file.save():
+            if self.base_path is None:
+                raise ValueError("Repository not configured")
             return target_path.relative_to(self.base_path)
         else:
             raise IOError(f"Failed to save file to {target_path}")
@@ -113,6 +123,9 @@ class FileSystemRepository(ITrackRepository):
         return []
 
     def list_all(self) -> Sequence[str]:
+        if self.base_path is None:
+            return []
+
         files = []
         for root, _, filenames in os.walk(self.base_path):
             for file in filenames:
@@ -139,8 +152,9 @@ class FileSystemRepository(ITrackRepository):
                 ):
                     # Create relative path
                     full_path = pathlib.Path(root) / file
-                    rel_path = full_path.relative_to(self.base_path)
-                    files.append(str(rel_path).replace(os.sep, "/"))
+                    if self.base_path:
+                        rel_path = full_path.relative_to(self.base_path)
+                        files.append(str(rel_path).replace(os.sep, "/"))
         return files
 
     def exists(self, rel_path: str) -> bool:
@@ -194,6 +208,9 @@ class FileSystemRepository(ITrackRepository):
                 policy.get_relative_path(target_category, date, filename)
             )
 
+        if self.base_path is None:
+            raise ValueError("Repository not configured")
+
         target_abs = self.base_path / target_rel_path
 
         # Check if target already exists
@@ -228,6 +245,8 @@ class FileSystemRepository(ITrackRepository):
         new_abs = rename_file_with_sidecar(source_abs, new_filename)
 
         # Calculate new relative path
+        if self.base_path is None:
+            raise ValueError("Repository not configured")
         new_rel_path = new_abs.relative_to(self.base_path)
 
         logger.info(f"Renamed file: {source_rel_path} -> {new_rel_path}")

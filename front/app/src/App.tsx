@@ -3,18 +3,28 @@ import { ApiService } from "./services/ApiService";
 import type { IFile } from "./models/File";
 import { MapComponent } from "./components/Map";
 import { Sidebar } from "./components/Sidebar";
+import { RepositorySelector } from "./components/RepositorySelector";
 import "./index.css";
 
 function App() {
   const [files, setFiles] = useState<IFile[]>([]);
   const [activeFiles, setActiveFiles] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRepoConfigured, setIsRepoConfigured] = useState(true);
   const [pickingLocation, setPickingLocation] = useState<string | null>(null);
   const [hoveredTrackIds, setHoveredTrackIds] = useState<string[]>([]);
 
   const loadFiles = async () => {
     try {
       await ApiService.getInstance().ensureConfigLoaded();
+
+      if (!ApiService.getInstance().isConfigured()) {
+        setIsRepoConfigured(false);
+        setLoading(false);
+        return;
+      }
+
+      setIsRepoConfigured(true);
       const fetchedFiles = await ApiService.getInstance().getTracks();
       setFiles(fetchedFiles);
     } catch (error) {
@@ -57,6 +67,17 @@ function App() {
     }
   };
 
+  if (!isRepoConfigured) {
+    return (
+      <RepositorySelector
+        onRepositorySet={() => {
+          setLoading(true);
+          loadFiles();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="container">
       <Sidebar
@@ -66,6 +87,7 @@ function App() {
         onUploadComplete={loadFiles}
         onSetLocationRequest={setPickingLocation}
         onHover={setHoveredTrackIds}
+        onChangeRepository={() => setIsRepoConfigured(false)}
       />
       <div className="main-content">
         {loading ? (
