@@ -179,21 +179,46 @@ const GeoJsonLayer = ({
                 />
               </a>
             )}
-            <button
-              onClick={handleSetLocation}
+            <div
               style={{
                 marginTop: "10px",
-                padding: "5px 10px",
-                background: "#0066cc",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "12px",
+                display: "flex",
+                gap: "5px",
+                justifyContent: "center",
               }}
             >
-              📍 Set Location
-            </button>
+              <a
+                href={ApiService.getInstance().getFileUrl(file)}
+                download
+                style={{
+                  padding: "5px 10px",
+                  background: "#28a745",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  textDecoration: "none",
+                  display: "inline-block",
+                }}
+              >
+                ⬇️ Download
+              </a>
+              <button
+                onClick={handleSetLocation}
+                style={{
+                  padding: "5px 10px",
+                  background: "#0066cc",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                }}
+              >
+                📍 Set Location
+              </button>
+            </div>
           </div>
         </Popup>
       </Marker>
@@ -207,6 +232,30 @@ const GeoJsonLayer = ({
       style={{
         color: isHovered ? "#00FFFF" : getColor(file.category),
         weight: isHovered ? 6 : 2,
+      }}
+      onEachFeature={(_feature, layer) => {
+        layer.bindPopup(
+          `<div style="text-align: center;">
+            <h4>${file.filename.split("/").pop()}</h4>
+            <a
+              href="${ApiService.getInstance().getFileUrl(file)}"
+              download
+              style="
+                padding: 5px 10px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                text-decoration: none;
+                display: inline-block;
+              "
+            >
+              ⬇️ Download
+            </a>
+          </div>`,
+        );
       }}
     />
   );
