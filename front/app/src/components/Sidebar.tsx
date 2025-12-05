@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { IFile } from "../models/File";
 import { Upload } from "./Upload";
 import { ApiService } from "../services/ApiService";
+import { MediaViewer } from "./MediaViewer";
 
 interface SidebarProps {
   files: IFile[];
@@ -90,6 +91,7 @@ interface TreeNodeProps {
   onDragLeave: () => void;
   onDrop: (targetPath: string) => void;
   dragState: DragState;
+  onViewMedia: (file: IFile) => void;
 }
 
 const TreeNodeComponent: React.FC<TreeNodeProps> = ({
@@ -104,6 +106,7 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
   onDragLeave,
   onDrop,
   dragState,
+  onViewMedia,
 }) => {
   const [isOpen, setIsOpen] = useState(level === 0); // Open top level by default
   const [editingFile, setEditingFile] = useState<string | null>(null);
@@ -295,6 +298,7 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
                 dragState={dragState}
+                onViewMedia={onViewMedia}
               />
             ))}
 
@@ -392,14 +396,9 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const repoBaseUrl =
-                          ApiService.getInstance().getRepoBaseUrl();
-                        window.open(
-                          `${repoBaseUrl}/${file.fullPath}`,
-                          "_blank",
-                        );
+                        onViewMedia(file);
                       }}
-                      title="Open in new tab"
+                      title="View media"
                       style={{
                         background: "none",
                         border: "none",
@@ -409,7 +408,7 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                         fontSize: "14px",
                       }}
                     >
-                      🔗
+                      👁️
                     </button>
                     <button
                       onClick={handleSetLocation}
@@ -451,6 +450,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     draggedFile: null,
     dropTarget: null,
   });
+  const [viewingMedia, setViewingMedia] = useState<IFile | null>(null);
 
   const handleDragStart = (file: IFile) => {
     setDragState({ draggedFile: file, dropTarget: null });
@@ -575,9 +575,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             dragState={dragState}
+            onViewMedia={(file) => setViewingMedia(file)}
           />
         ))}
       </div>
+
+      {/* Media Viewer Modal */}
+      {viewingMedia && (
+        <MediaViewer
+          file={viewingMedia}
+          allMediaFiles={files.filter((f) => f.type === "media")}
+          onClose={() => setViewingMedia(null)}
+          onNavigate={(file) => setViewingMedia(file)}
+        />
+      )}
     </div>
   );
 };
