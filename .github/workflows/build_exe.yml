@@ -1,0 +1,72 @@
+name: Build Standalone Executable
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system .
+          uv pip install --system pyinstaller
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: front/app/package-lock.json
+
+      - name: Build Frontend
+        shell: bash
+        run: |
+          cd front/app
+          npm ci
+          npm run build
+
+      - name: Build Executable
+        shell: bash
+        run: |
+          uv run pyinstaller packaging/ouffroad.spec --clean --noconfirm
+
+      - name: Rename Executable (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: mv dist/ouffroad dist/ouffroad-linux
+
+      - name: Rename Executable (Windows)
+        if: matrix.os == 'windows-latest'
+        run: mv dist/ouffroad.exe dist/ouffroad-windows.exe
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ouffroad-${{ matrix.os }}
+          path: dist/ouffroad-*
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ouffroad-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -120,6 +120,34 @@ Ouffroad will automatically create the necessary folder structure as you upload 
 
 ---
 
+## 📦 Running the Standalone Executable
+
+If you downloaded the executable (`.exe` for Windows or binary for Linux) from the Releases page, you don't need to install Python.
+
+### Windows (CMD or PowerShell)
+
+Open your terminal and run:
+
+```powershell
+# Run with default 'uploads' folder
+.\ouffroad.exe
+
+# Run with a specific repository
+.\ouffroad.exe --repo "C:\Users\Name\My Adventures"
+```
+
+### Linux
+
+```bash
+# Make it executable first
+chmod +x ouffroad
+
+# Run with a specific repository
+./ouffroad --repo /home/user/adventures
+```
+
+---
+
 ## 🛠️ Advanced Features
 
 - **Sidecar Files**: Metadata is stored in `.json` sidecar files next to your data, keeping your original files untouched.
