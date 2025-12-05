@@ -27,6 +27,7 @@ dependencies = [
     "requests",
     "fitparse",
     "Pillow",
+    "toml>=0.10.2",
 ]
 
 [project.scripts]
@@ -63,4 +64,10 @@ testpaths = [
 ]
 pythonpath = [
     "src"
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8.3.5",
 ]

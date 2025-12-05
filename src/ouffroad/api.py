@@ -147,3 +147,92 @@ async def get_config(
         "repo_base_url": f"/{app_config.repository_path.name}",
         "categories": categories,
     }
+
+
+# --- File Operations Models ---
+
+
+class FileUpdateRequest(BaseModel):
+    """Request model for file update operations."""
+
+    target_category: Optional[str] = None
+    target_folder: Optional[str] = None
+    new_filename: Optional[str] = None
+
+
+class FileUpdateResponse(BaseModel):
+    """Response model for file update operations."""
+
+    success: bool
+    old_path: str
+    new_path: str
+    message: str
+
+
+@router.patch("/file/{filepath:path}")
+async def update_file(
+    filepath: str,
+    updates: FileUpdateRequest,
+    repo: Annotated[FileSystemRepository, Depends(get_repository)],
+) -> FileUpdateResponse:
+    """
+    Update file properties (move, rename, etc.).
+
+    Args:
+        filepath: Current relative path of the file
+        updates: Update operations to perform
+        repo: Repository instance (injected)
+
+    Returns:
+        FileUpdateResponse with old and new paths
+
+    Raises:
+        HTTPException 404: File not found
+        HTTPException 400: Invalid parameters
+        HTTPException 500: Operation failed
+    """
+    try:
+        # Validate file exists
+        if not repo.exists(filepath):
+            raise HTTPException(status_code=404, detail=f"File not found: {filepath}")
+
+        new_path = filepath
+        operations = []
+
+        # Perform move operation
+        if updates.target_category:
+            try:
+                new_path = repo.move(
+                    new_path, updates.target_category, updates.target_folder
+                )
+                operations.append(f"moved to {updates.target_category}")
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        # Perform rename operation
+        if updates.new_filename:
+            try:
+                new_path = repo.rename(new_path, updates.new_filename)
+                operations.append(f"renamed to {updates.new_filename}")
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        # Check if any operation was performed
+        if not operations:
+            raise HTTPException(
+                status_code=400, detail="No update operations specified"
+            )
+
+        message = "File " + " and ".join(operations)
+
+        return FileUpdateResponse(
+            success=True, old_path=filepath, new_path=new_path, message=message
+        )
+
+    except HTTPException:
+        raise
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Error updating file {filepath}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
