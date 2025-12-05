@@ -47,13 +47,11 @@ echo -e "${BLUE}║   Ouffroad Test Orchestration Script  ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
 
-echo -e "${YELLOW}[0/5] Installing ouffroad...${NC}"
+echo -e "${YELLOW}[0/6] Installing ouffroad...${NC}"
 uv pip install .
 
-pytest
-
 # Step 1: Create test repository
-echo -e "${YELLOW}[1/5] Creating test repository...${NC}"
+echo -e "${YELLOW}[1/6] Creating test repository...${NC}"
 mkdir -p "$TEST_REPO_DIR"/{trail,enduro,special_events,media}
 
 # Create test storage.toml
@@ -100,21 +98,27 @@ cat > "$TEST_REPO_DIR/trail/2024/01/test_track.gpx" << 'EOF'
 </gpx>
 EOF
 
-# Step 2: Run unit tests
-echo -e "\n${YELLOW}[2/5] Running unit tests (Vitest)...${NC}"
+# Step 2: Run backend unit tests
+echo -e "\n${YELLOW}[2/6] Running backend unit tests (pytest)...${NC}"
+cd "$PROJECT_ROOT"
+uv run pytest -v
+echo -e "${GREEN}✓ Backend unit tests passed${NC}"
+
+# Step 3: Run frontend unit tests
+echo -e "\n${YELLOW}[3/6] Running frontend unit tests (Vitest)...${NC}"
 cd "$PROJECT_ROOT/front/app"
 npm test -- --run
-echo -e "${GREEN}✓ Unit tests passed${NC}"
+echo -e "${GREEN}✓ Frontend unit tests passed${NC}"
 
-# Step 3: Start backend with test repository
-echo -e "\n${YELLOW}[3/5] Starting backend with test repository...${NC}"
+# Step 4: Start backend with test repository
+echo -e "\n${YELLOW}[4/6] Starting backend with test repository...${NC}"
 cd "$PROJECT_ROOT"
 
 # Set environment variable for test repository
 export OUFFROAD_REPOSITORY_PATH="$TEST_REPO_DIR"
 
 # Start backend in background
-ouffroad --repo $TEST_REPO_DIR > /tmp/ouffroad_test_backend.log 2>&1 &
+uv run ouffroad --repo $TEST_REPO_DIR > /tmp/ouffroad_test_backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to be ready
@@ -132,8 +136,8 @@ for i in {1..30}; do
     sleep 1
 done
 
-# Step 4: Run E2E tests
-echo -e "\n${YELLOW}[4/5] Running E2E tests (Playwright)...${NC}"
+# Step 5: Run E2E tests
+echo -e "\n${YELLOW}[5/6] Running E2E tests (Playwright)...${NC}"
 cd "$PROJECT_ROOT/front/app"
 
 # Check if Playwright browsers are installed
@@ -146,11 +150,12 @@ fi
 npm run test:e2e
 echo -e "${GREEN}✓ E2E tests passed${NC}"
 
-# Step 5: Summary
+# Step 6: Summary
 echo -e "\n${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║          Test Summary                  ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
-echo -e "${GREEN}✓ Unit tests: PASSED${NC}"
+echo -e "${GREEN}✓ Backend unit tests: PASSED${NC}"
+echo -e "${GREEN}✓ Frontend unit tests: PASSED${NC}"
 echo -e "${GREEN}✓ E2E tests: PASSED${NC}"
 echo -e "${GREEN}✓ All tests completed successfully!${NC}"
 echo ""
