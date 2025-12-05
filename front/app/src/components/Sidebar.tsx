@@ -12,6 +12,11 @@ interface SidebarProps {
   onHover: (ids: string[]) => void;
 }
 
+interface DragState {
+  draggedFile: IFile | null;
+  dropTarget: string | null;
+}
+
 interface TreeNode {
   name: string;
   path: string;
@@ -80,6 +85,11 @@ interface TreeNodeProps {
   onSetLocationRequest: (filePath: string) => void;
   onHover: (ids: string[]) => void;
   level: number;
+  onDragStart: (file: IFile) => void;
+  onDragOver: (targetPath: string) => void;
+  onDragLeave: () => void;
+  onDrop: (targetPath: string) => void;
+  dragState: DragState;
 }
 
 const TreeNodeComponent: React.FC<TreeNodeProps> = ({
@@ -89,6 +99,11 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
   onSetLocationRequest,
   onHover,
   level,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  dragState,
 }) => {
   const [isOpen, setIsOpen] = useState(level === 0); // Open top level by default
 
@@ -148,6 +163,8 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
     });
   };
 
+  const isDropTarget = dragState.dropTarget === node.path;
+
   return (
     <div className={containerClass}>
       <div
@@ -158,6 +175,26 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
           onHover(ids);
         }}
         onMouseLeave={() => onHover([])}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (dragState.draggedFile) {
+            onDragOver(node.path);
+          }
+        }}
+        onDragLeave={(e) => {
+          e.stopPropagation();
+          onDragLeave();
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onDrop(node.path);
+        }}
+        style={{
+          backgroundColor: isDropTarget ? "#e3f2fd" : undefined,
+          border: isDropTarget ? "2px dashed #2196f3" : undefined,
+        }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
           <span className={`chevron ${!isOpen ? "collapsed" : ""}`}>▼</span>
@@ -205,6 +242,11 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                 onSetLocationRequest={onSetLocationRequest}
                 onHover={onHover}
                 level={level + 1}
+                onDragStart={onDragStart}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+                dragState={dragState}
               />
             ))}
 
@@ -224,14 +266,22 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
               <div
                 key={file.fullPath}
                 className={`track-item ${isActive ? "active" : ""}`}
-                onClick={(e) => {
+                onClick={() => onToggle(file)}
+                draggable
+                onDragStart={(e) => {
                   e.stopPropagation();
-                  onToggle(file);
+                  onDragStart(file);
+                }}
+                onDragEnd={(e) => {
+                  e.stopPropagation();
+                  onDragLeave();
                 }}
                 style={{
                   marginLeft: `${(level + 1) * 15}px`,
                   display: "flex",
                   alignItems: "center",
+                  cursor: dragState.draggedFile === file ? "grabbing" : "grab",
+                  opacity: dragState.draggedFile === file ? 0.5 : 1,
                 }}
                 onMouseEnter={() => onHover([file.fullPath])}
                 onMouseLeave={() => onHover([])}
@@ -322,6 +372,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const tree = buildTree(files);
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
+  const [dragState, setDragState] = useState<DragState>({
+    draggedFile: null,
+    dropTarget: null,
+  });
+
+  const handleDragStart = (file: IFile) => {
+    setDragState({ draggedFile: file, dropTarget: null });
+  };
+
+  const handleDragOver = (targetPath: string) => {
+    setDragState((prev) => ({ ...prev, dropTarget: targetPath }));
+  };
+
+  const handleDragLeave = () => {
+    setDragState((prev) => ({ ...prev, dropTarget: null }));
+  };
+
+  const handleDrop = async (targetPath: string) => {
+    const { draggedFile } = dragState;
+    if (!draggedFile) return;
+
+    try {
+      // Extract target category from path (first part)
+      const targetCategory = targetPath.split("/")[0];
+
+      // Extract target folder (everything after category)
+      const pathParts = targetPath.split("/");
+      const targetFolder =
+        pathParts.length > 1 ? pathParts.slice(1).join("/") : undefined;
+
+      console.log(
+        `[Sidebar] Moving ${draggedFile.fullPath} to category: ${targetCategory}, folder: ${targetFolder}`,
+      );
+
+      await ApiService.getInstance().updateFile(draggedFile.fullPath, {
+        target_category: targetCategory,
+        target_folder: targetFolder,
+      });
+
+      // Refresh file list
+      onUploadComplete();
+    } catch (error) {
+      console.error("[Sidebar] Error moving file:", error);
+      alert("Error moving file. Please try again.");
+    } finally {
+      setDragState({ draggedFile: null, dropTarget: null });
+    }
+  };
 
   // Sort categories: Tracks first, then Media, then alphabetical
   const sortedCategories = Object.values(tree).sort((a, b) => {
@@ -397,6 +495,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onSetLocationRequest={onSetLocationRequest}
             onHover={onHover}
             level={0}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            dragState={dragState}
           />
         ))}
       </div>

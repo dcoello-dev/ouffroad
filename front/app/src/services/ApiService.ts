@@ -172,4 +172,42 @@ export class ApiService {
   public getFileUrl(file: IFile): string {
     return `${this.repoBaseUrl}/${file.fullPath}`;
   }
+
+  /**
+   * Update file properties (move, rename, etc.)
+   */
+  async updateFile(
+    filepath: string,
+    updates: FileUpdateRequest,
+  ): Promise<FileUpdateResponse> {
+    try {
+      console.log(`[ApiService] Updating file: ${filepath}`, updates);
+      const response = await axios.patch<FileUpdateResponse>(
+        `${this.baseUrl}/file/${filepath}`,
+        updates,
+      );
+      console.log("[ApiService] File update response:", response.data);
+      return response.data;
+    } catch (error: unknown) {
+      console.error("[ApiService] Error updating file:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("[ApiService] Error details:", error.response?.data);
+      }
+      throw error;
+    }
+  }
+}
+
+// TypeScript interfaces for file operations
+export interface FileUpdateRequest {
+  target_category?: string;
+  target_folder?: string;
+  new_filename?: string;
+}
+
+export interface FileUpdateResponse {
+  success: boolean;
+  old_path: string;
+  new_path: string;
+  message: string;
 }

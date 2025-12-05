@@ -147,4 +147,131 @@ describe("ApiService", () => {
       expect(service.getRepoBaseUrl()).toBe("/uploads");
     });
   });
+
+  describe("File Operations", () => {
+    beforeEach(() => {
+      // Mock config loading
+      vi.mocked(axios.get).mockResolvedValue({
+        data: { categories: {}, repo_base_url: "/uploads" },
+      });
+    });
+
+    describe("updateFile", () => {
+      it("should call PATCH endpoint with correct parameters", async () => {
+        const mockResponse = {
+          success: true,
+          old_path: "trail/2024/01/old.gpx",
+          new_path: "enduro/2024/01/old.gpx",
+          message: "File moved to enduro",
+        };
+
+        vi.mocked(axios.patch).mockResolvedValue({ data: mockResponse });
+
+        const service = ApiService.getInstance();
+        const result = await service.updateFile("trail/2024/01/old.gpx", {
+          target_category: "enduro",
+        });
+
+        expect(axios.patch).toHaveBeenCalledWith(
+          "/api/file/trail/2024/01/old.gpx",
+          { target_category: "enduro" },
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it("should handle move operation", async () => {
+        const mockResponse = {
+          success: true,
+          old_path: "trail/2024/01/track.gpx",
+          new_path: "enduro/2024/02/track.gpx",
+          message: "File moved to enduro",
+        };
+
+        vi.mocked(axios.patch).mockResolvedValue({ data: mockResponse });
+
+        const service = ApiService.getInstance();
+        const result = await service.updateFile("trail/2024/01/track.gpx", {
+          target_category: "enduro",
+          target_folder: "2024/02",
+        });
+
+        expect(result.new_path).toBe("enduro/2024/02/track.gpx");
+        expect(result.message).toContain("moved");
+      });
+
+      it("should handle rename operation", async () => {
+        const mockResponse = {
+          success: true,
+          old_path: "trail/2024/01/old.gpx",
+          new_path: "trail/2024/01/new.gpx",
+          message: "File renamed to new.gpx",
+        };
+
+        vi.mocked(axios.patch).mockResolvedValue({ data: mockResponse });
+
+        const service = ApiService.getInstance();
+        const result = await service.updateFile("trail/2024/01/old.gpx", {
+          new_filename: "new.gpx",
+        });
+
+        expect(result.new_path).toBe("trail/2024/01/new.gpx");
+        expect(result.message).toContain("renamed");
+      });
+
+      it("should handle combined move and rename", async () => {
+        const mockResponse = {
+          success: true,
+          old_path: "trail/2024/01/old.gpx",
+          new_path: "enduro/2024/02/new.gpx",
+          message: "File moved to enduro and renamed to new.gpx",
+        };
+
+        vi.mocked(axios.patch).mockResolvedValue({ data: mockResponse });
+
+        const service = ApiService.getInstance();
+        const result = await service.updateFile("trail/2024/01/old.gpx", {
+          target_category: "enduro",
+          target_folder: "2024/02",
+          new_filename: "new.gpx",
+        });
+
+        expect(result.new_path).toBe("enduro/2024/02/new.gpx");
+        expect(result.message).toContain("moved");
+        expect(result.message).toContain("renamed");
+      });
+
+      it("should handle errors from API", async () => {
+        vi.mocked(axios.patch).mockRejectedValue({
+          response: {
+            status: 404,
+            data: { detail: "File not found" },
+          },
+        });
+
+        const service = ApiService.getInstance();
+
+        await expect(
+          service.updateFile("nonexistent/file.gpx", {
+            target_category: "enduro",
+          }),
+        ).rejects.toMatchObject({
+          response: {
+            status: 404,
+          },
+        });
+      });
+
+      it("should handle network errors", async () => {
+        vi.mocked(axios.patch).mockRejectedValue(new Error("Network error"));
+
+        const service = ApiService.getInstance();
+
+        await expect(
+          service.updateFile("trail/2024/01/track.gpx", {
+            target_category: "enduro",
+          }),
+        ).rejects.toThrow("Network error");
+      });
+    });
+  });
 });
