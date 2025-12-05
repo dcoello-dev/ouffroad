@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ouffroad"
-version = "0.0.1"
 description = "GPX Track Manager and Visualizer"
+dynamic = ["version"]
 authors = [
   { name="dcoello-dev", email="dcpulido91@gmail.com" },
 ]
@@ -43,7 +43,7 @@ path = "scripts/hatch_build.py"
 allow-direct-references = true
 
 [tool.hatch.version]
-path = "src/ouffroad/_init_.py"
+path = "src/ouffroad/__init__.py"
 
 
 [project.optional-dependencies]
