@@ -106,10 +106,58 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
   dragState,
 }) => {
   const [isOpen, setIsOpen] = useState(level === 0); // Open top level by default
+  const [editingFile, setEditingFile] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
 
   const toggleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOpen(!isOpen);
+  };
+
+  const handleRenameStart = (file: IFile, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const filename = file.filename.split("/").pop() || "";
+    setEditingFile(file.fullPath);
+    setEditingName(filename);
+  };
+
+  const handleRenameCancel = () => {
+    setEditingFile(null);
+    setEditingName("");
+  };
+
+  const handleRenameSave = async (file: IFile) => {
+    if (!editingName.trim() || editingName === file.filename.split("/").pop()) {
+      handleRenameCancel();
+      return;
+    }
+
+    setIsRenaming(true);
+    try {
+      await ApiService.getInstance().updateFile(file.fullPath, {
+        new_filename: editingName.trim(),
+      });
+
+      // Refresh file list
+      window.location.reload(); // Simple refresh, could be optimized
+    } catch (error) {
+      console.error("[Sidebar] Error renaming file:", error);
+      alert("Error renaming file. Please try again.");
+    } finally {
+      setIsRenaming(false);
+      handleRenameCancel();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, file: IFile) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleRenameSave(file);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      handleRenameCancel();
+    }
   };
 
   const isCategory = level === 0;
@@ -292,9 +340,36 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                   readOnly
                   style={{ marginRight: "10px" }}
                 />
-                <span style={{ flex: 1 }}>
-                  {file.filename.split("/").pop()}
-                </span>
+                {editingFile === file.fullPath ? (
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, file)}
+                    onBlur={handleRenameCancel}
+                    autoFocus
+                    disabled={isRenaming}
+                    style={{
+                      flex: 1,
+                      padding: "2px 4px",
+                      border: "1px solid #2196f3",
+                      borderRadius: "2px",
+                      outline: "none",
+                      fontSize: "inherit",
+                      fontFamily: "inherit",
+                      backgroundColor: isRenaming ? "#f0f0f0" : "white",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <span
+                    style={{ flex: 1, cursor: "text" }}
+                    onDoubleClick={(e) => handleRenameStart(file, e)}
+                    title="Double-click to rename"
+                  >
+                    {file.filename.split("/").pop()}
+                  </span>
+                )}
                 <a
                   href={ApiService.getInstance().getFileUrl(file)}
                   download
