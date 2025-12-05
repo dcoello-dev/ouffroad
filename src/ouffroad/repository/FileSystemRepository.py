@@ -145,3 +145,91 @@ class FileSystemRepository(ITrackRepository):
 
     def exists(self, rel_path: str) -> bool:
         return self._get_absolute_path(rel_path).exists()
+
+    def move(
+        self,
+        source_rel_path: str,
+        target_category: str,
+        target_folder: Optional[str] = None,
+    ) -> str:
+        """Move a file to a different category/folder."""
+        from ouffroad.core.file_operations import move_file_with_sidecar
+
+        # Validate source exists
+        source_abs = self._get_absolute_path(source_rel_path)
+        if not source_abs.exists():
+            raise FileNotFoundError(f"Source file not found: {source_rel_path}")
+
+        # Validate category configuration
+        if not self.app_config.repository_config:
+            raise ValueError("Repository configuration not loaded.")
+
+        category_config = self.app_config.repository_config.categories.get(
+            target_category
+        )
+        if not category_config:
+            raise ValueError(f"Invalid target category: {target_category}")
+
+        # Determine target path
+        if target_folder:
+            # User specified exact folder
+            target_rel_path = (
+                pathlib.Path(target_category) / target_folder / source_abs.name
+            )
+        else:
+            # Use storage policy to determine location
+            # Load file to get metadata (date, etc.)
+            files = self.get(source_rel_path)
+            if not files:
+                raise ValueError(f"Could not load file: {source_rel_path}")
+
+            file = files[0]
+            file.load()
+
+            policy = self._get_storage_policy_instance(category_config.storage_policy)
+            date = file.date()
+            filename = file.name()
+
+            target_rel_path = pathlib.Path(
+                policy.get_relative_path(target_category, date, filename)
+            )
+
+        target_abs = self.base_path / target_rel_path
+
+        # Check if target already exists
+        if target_abs.exists():
+            raise ValueError(f"Target file already exists: {target_rel_path}")
+
+        # Move file with sidecar
+        move_file_with_sidecar(source_abs, target_abs, create_dirs=True)
+
+        logger.info(f"Moved file: {source_rel_path} -> {target_rel_path}")
+
+        return str(target_rel_path).replace(os.sep, "/")
+
+    def rename(self, source_rel_path: str, new_filename: str) -> str:
+        """Rename a file."""
+        from ouffroad.core.file_operations import rename_file_with_sidecar
+
+        # Validate source exists
+        source_abs = self._get_absolute_path(source_rel_path)
+        if not source_abs.exists():
+            raise FileNotFoundError(f"Source file not found: {source_rel_path}")
+
+        # Validate new filename
+        if not new_filename or "/" in new_filename or "\\" in new_filename:
+            raise ValueError(f"Invalid filename: {new_filename}")
+
+        # Preserve extension if not provided
+        if not pathlib.Path(new_filename).suffix:
+            new_filename += source_abs.suffix
+
+        # Rename file with sidecar
+        new_abs = rename_file_with_sidecar(source_abs, new_filename)
+
+        # Calculate new relative path
+        new_rel_path = new_abs.relative_to(self.base_path)
+
+        logger.info(f"Renamed file: {source_rel_path} -> {new_rel_path}")
+
+        return str(new_rel_path).replace(os.sep, "/")
