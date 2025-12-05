@@ -1,9 +1,26 @@
 import { test, expect } from "@playwright/test";
+import path from "path";
 
 test.describe("Sidebar", () => {
-  test("should render sidebar with upload section", async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto("/");
 
+    // Check if we are in setup mode (RepositorySelector visible)
+    const isSetupMode = await page.isVisible(".repository-selector-card");
+    if (isSetupMode) {
+      // Resolve path to .test_repository
+      // Assuming we are running from front/app
+      const repoPath = path.resolve(process.cwd(), "../../.test_repository");
+
+      // Fill input and submit
+      await page.fill(
+        'input[placeholder="/path/to/your/repository"]',
+        repoPath,
+      );
+      await page.click('button[type="submit"]');
+    }
+  });
+  test("should render sidebar with upload section", async ({ page }) => {
     // Check that sidebar is visible
     const sidebar = page.locator(".sidebar");
     await expect(sidebar).toBeVisible();
@@ -14,8 +31,6 @@ test.describe("Sidebar", () => {
   });
 
   test("should display category dropdown", async ({ page }) => {
-    await page.goto("/");
-
     // Wait for categories to load
     const categorySelect = page.locator(".category-select");
     await expect(categorySelect).toBeVisible();
@@ -30,8 +45,6 @@ test.describe("Sidebar", () => {
   });
 
   test("should expand and collapse category groups", async ({ page }) => {
-    await page.goto("/");
-
     // Wait for track list to load
     await page.waitForSelector(".track-list", { timeout: 5000 });
 
@@ -48,8 +61,6 @@ test.describe("Sidebar", () => {
   });
 
   test("should show track count for categories", async ({ page }) => {
-    await page.goto("/");
-
     // Wait for track list
     await page.waitForSelector(".track-list", { timeout: 5000 });
 
@@ -63,8 +74,6 @@ test.describe("Sidebar", () => {
   });
 
   test("should allow file upload selection", async ({ page }) => {
-    await page.goto("/");
-
     // Find file input
     const fileInput = page.locator('input[type="file"]');
     await expect(fileInput).toBeAttached();

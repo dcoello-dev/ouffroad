@@ -5,7 +5,7 @@ import logging.handlers
 import argparse  # Added import
 import pathlib  # Added import
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -75,16 +75,36 @@ def create_app(config: OuffroadConfig | None = None) -> FastAPI:
         )
 
     # Mount the repository path dynamically
+    # Initialize config in app state
     if config is None:
-        pass
+        # Should not happen in normal usage as main() provides a config
+        app.state.config = OuffroadConfig(repository_path=None)
     else:
         app.state.config = config
-        if config.repository_path.exists():
-            app.mount(
-                f"/{config.repository_path.name}",
-                StaticFiles(directory=config.repository_path),
-                name=config.repository_path.name,
-            )
+
+    # Dynamic route to serve files from the repository
+    @app.get("/files/{file_path:path}")
+    async def serve_file(file_path: str):
+        """
+        Serve files from the configured repository path.
+        Supports Range requests for media streaming.
+        """
+        if not app.state.config.repository_path:
+            raise HTTPException(status_code=404, detail="Repository not configured")
+
+        # Sanitize file_path to prevent directory traversal
+        # pathlib / operator handles this but good to be safe
+        # Actually we need subdirectories support, so we trust pathlib / operator
+        # to not go above root if we don't use ..
+        if ".." in file_path:
+            raise HTTPException(status_code=400, detail="Invalid file path")
+
+        full_path = app.state.config.repository_path / file_path
+
+        if not full_path.exists() or not full_path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+
+        return FileResponse(full_path)
 
     # Serve React Frontend
     # Resolve paths relative to the package installation directory
@@ -137,13 +157,26 @@ def main():
     parser.add_argument(
         "--repo",
         type=str,
-        default="uploads",  # Default to existing 'uploads' folder
+        default=None,  # Default is None to detect if user provided it
         help="Path to the repository root (e.g., 'my_tracks/').",
     )
     args = parser.parse_args()
 
+    # Determine repository path
+    repo_path = None
+    if args.repo:
+        repo_path = pathlib.Path(args.repo)
+    elif pathlib.Path("uploads").exists():
+        # Fallback to 'uploads' if it exists and no repo specified
+        logger.info("No repo specified, found 'uploads' directory, using it.")
+        repo_path = pathlib.Path("uploads")
+    else:
+        logger.info(
+            "No repo specified and 'uploads' not found. Starting in setup mode."
+        )
+
     # Initialize OuffroadConfig
-    app_config = OuffroadConfig(repository_path=pathlib.Path(args.repo))
+    app_config = OuffroadConfig(repository_path=repo_path)
     app_config.load_repository_config()
 
     app = create_app(app_config)

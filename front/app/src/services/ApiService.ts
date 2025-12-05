@@ -6,7 +6,7 @@ import type { GeoJsonFeatureCollection } from "../models/GeoJson";
 export class ApiService {
   private static instance: ApiService;
   private baseUrl: string = "/api";
-  private repoBaseUrl: string = "/uploads"; // Default fallback
+  private repoBaseUrl: string | null = null; // Changed to nullable
   private configPromise: Promise<void>;
 
   private categories: Record<string, any> = {};
@@ -23,6 +23,9 @@ export class ApiService {
       if (response.data.repo_base_url) {
         this.repoBaseUrl = response.data.repo_base_url;
         console.log("[ApiService] Set repoBaseUrl to:", this.repoBaseUrl);
+      } else {
+        this.repoBaseUrl = null;
+        console.log("[ApiService] No repo configured");
       }
       if (response.data.categories) {
         this.categories = response.data.categories;
@@ -46,8 +49,22 @@ export class ApiService {
     await this.configPromise;
   }
 
-  public getRepoBaseUrl(): string {
+  public getRepoBaseUrl(): string | null {
     return this.repoBaseUrl;
+  }
+
+  public isConfigured(): boolean {
+    return this.repoBaseUrl !== null;
+  }
+
+  public async setRepository(path: string): Promise<void> {
+    await axios.post(`${this.baseUrl}/config/repository`, { path });
+    await this.fetchConfig(); // Reload config
+  }
+
+  public async getSystemDrives(): Promise<{ path: string; name: string }[]> {
+    const response = await axios.get(`${this.baseUrl}/system/drives`);
+    return response.data.drives;
   }
 
   public getCategories(): Record<string, any> {

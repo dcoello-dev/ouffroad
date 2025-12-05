@@ -143,8 +143,8 @@ describe("ApiService", () => {
       const service = ApiService.getInstance();
       await service.ensureConfigLoaded();
 
-      // Should use default fallback
-      expect(service.getRepoBaseUrl()).toBe("/uploads");
+      // Should use default fallback (null)
+      expect(service.getRepoBaseUrl()).toBeNull();
     });
   });
 

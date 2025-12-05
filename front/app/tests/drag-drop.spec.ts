@@ -1,10 +1,45 @@
 import { test, expect } from "@playwright/test";
+import path from "path";
 
 test.describe("Drag & Drop File Management", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
+
+    // Check if we are in setup mode (RepositorySelector visible)
+    const isSetupMode = await page.isVisible(".repository-selector-card");
+    if (isSetupMode) {
+      // Resolve path to .test_repository
+      // Assuming we are running from front/app
+      const repoPath = path.resolve(process.cwd(), "../../.test_repository");
+
+      // Fill input and submit
+      await page.fill(
+        'input[placeholder="/path/to/your/repository"]',
+        repoPath,
+      );
+      await page.click('button[type="submit"]');
+    }
+
     // Wait for app to load
     await page.waitForSelector(".sidebar");
+
+    // Expand folders to reveal files
+    // Categories (level 0) are open by default
+
+    // Expand first year (level 1) if present
+    try {
+      const yearHeader = page.locator(".year-header").first();
+      await yearHeader.waitFor({ state: "visible", timeout: 2000 });
+      await yearHeader.click();
+
+      // Expand first month (level 2) if present
+      const monthHeader = page.locator(".month-header").first();
+      await monthHeader.waitFor({ state: "visible", timeout: 2000 });
+      await monthHeader.click();
+    } catch (e) {
+      // Ignore errors if folders don't exist (e.g. flat structure)
+      console.log("Could not expand folders:", e);
+    }
   });
 
   test("should show visual feedback when dragging file", async ({ page }) => {
@@ -143,12 +178,15 @@ test.describe("Drag & Drop File Management", () => {
     // Wait for files to load
     await page.waitForSelector(".track-item", { timeout: 5000 });
 
-    // Expand first category to see folders
+    // Expand first category to see folders if not already visible
     const firstCategory = page.locator(".category-header").first();
-    await firstCategory.click();
+    const yearHeader = page.locator(".year-header").first();
 
-    // Wait for folders to appear
-    await page.waitForSelector(".year-header", { timeout: 2000 });
+    if (!(await yearHeader.isVisible())) {
+      await firstCategory.click();
+      // Wait for folders to appear
+      await page.waitForSelector(".year-header", { timeout: 2000 });
+    }
 
     // Get a file
     const file = page.locator(".track-item").first();
