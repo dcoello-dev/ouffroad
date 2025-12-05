@@ -168,4 +168,8 @@ export class ApiService {
       throw error;
     }
   }
+
+  public getFileUrl(file: IFile): string {
+    return `${this.repoBaseUrl}/${file.fullPath}`;
+  }
 }

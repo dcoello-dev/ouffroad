@@ -245,6 +245,23 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                 <span style={{ flex: 1 }}>
                   {file.filename.split("/").pop()}
                 </span>
+                <a
+                  href={ApiService.getInstance().getFileUrl(file)}
+                  download
+                  onClick={(e) => e.stopPropagation()}
+                  title="Download"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    opacity: 0.6,
+                    padding: "0 5px",
+                    fontSize: "14px",
+                    textDecoration: "none",
+                  }}
+                >
+                  ⬇️
+                </a>
                 {isMedia && (
                   <>
                     <button
