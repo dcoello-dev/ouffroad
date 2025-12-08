@@ -126,7 +126,7 @@ test.describe("File Rename Functionality", () => {
       .locator("span")
       .filter({ hasText: /.+/ })
       .first();
-    const originalName = await fileNameSpan.textContent();
+    await fileNameSpan.textContent();
 
     // Start rename
     await fileNameSpan.dblclick();
@@ -202,7 +202,7 @@ test.describe("File Rename Functionality", () => {
 
     // Immediately check if input is disabled (might be too fast to catch)
     // This is a best-effort check
-    const isDisabled = await renameInput.isDisabled().catch(() => false);
+    await renameInput.isDisabled().catch(() => false);
     // Note: This might not always catch the disabled state due to timing
   });
 

@@ -1,0 +1,46 @@
+{
+    "name": "ouffroad-electron",
+    "version": "0.1.0",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron . --no-sandbox",
+        "dist": "electron-builder"
+    },
+    "devDependencies": {
+        "electron": "^28.0.0",
+        "electron-builder": "^26.0.12"
+    },
+    "build": {
+        "appId": "com.ouffroad.app",
+        "productName": "Ouffroad",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "main.js",
+            "preload.js",
+            "package.json"
+        ],
+        "linux": {
+            "target": [
+                "AppImage"
+            ],
+            "category": "Utility",
+            "extraResources": [
+                {
+                    "from": "../../dist/ouffroad",
+                    "to": "bin/ouffroad"
+                }
+            ]
+        },
+        "win": {
+            "target": "nsis",
+            "extraResources": [
+                {
+                    "from": "../../dist/ouffroad.exe",
+                    "to": "bin/ouffroad.exe"
+                }
+            ]
+        }
+    }
+}

@@ -77,10 +77,8 @@ test.describe("Drag & Drop File Management", () => {
     const targetCategory = categories.nth(1); // Get second category
 
     // Get initial category name to ensure we're moving to different category
-    const sourceCategoryText = await page
-      .locator(".category-header")
-      .first()
-      .textContent();
+    // Get initial category name to ensure we're moving to different category
+    await page.locator(".category-header").first().textContent();
 
     // Start drag
     await firstFile.hover();
