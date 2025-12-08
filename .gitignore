@@ -1,4 +1,12 @@
 # Byte-compiled / optimized / DLL files
+
+uv.lock
+squashfs-root/
+
+front/electron/node_modules/
+front/electron/dist/
+.opencode/
+
 __pycache__/
 *.py[cod]
 *$py.class

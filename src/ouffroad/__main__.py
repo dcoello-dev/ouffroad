@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 def configure_logging(log_level: str = "INFO"):
     """Configure application-wide logging."""
     # Create logs directory if it doesn't exist
-    log_dir = pathlib.Path("logs")
-    log_dir.mkdir(exist_ok=True)
+    # log_dir = pathlib.Path("logs")
+    # log_dir.mkdir(exist_ok=True)
 
     # Configure root logger
     logging.basicConfig(
@@ -31,12 +31,12 @@ def configure_logging(log_level: str = "INFO"):
             # Console handler
             logging.StreamHandler(),
             # File handler with rotation
-            logging.handlers.RotatingFileHandler(
-                "logs/ouffroad.log",
-                maxBytes=10485760,  # 10MB
-                backupCount=5,
-                encoding="utf-8",
-            ),
+            # logging.handlers.RotatingFileHandler(
+            #     "logs/ouffroad.log",
+            #     maxBytes=10485760,  # 10MB
+            #     backupCount=5,
+            #     encoding="utf-8",
+            # ),
         ],
     )
 

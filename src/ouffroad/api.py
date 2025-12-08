@@ -167,8 +167,13 @@ async def set_repository(
     app_config: Annotated[OuffroadConfig, Depends(get_app_config)],
 ):
     """Set or update the repository path."""
+    print(f"DEBUG: Received repository path request: '{config_request.path}'")
     path = pathlib.Path(config_request.path)
+    print(f"DEBUG: Resolved path: '{path.resolve()}'")
+    print(f"DEBUG: Exists: {path.exists()}, Is Dir: {path.is_dir()}")
+
     if not path.exists() or not path.is_dir():
+        print(f"DEBUG: Validation failed for path: {path}")
         raise HTTPException(status_code=400, detail=f"Invalid repository path: {path}")
 
     app_config.repository_path = path

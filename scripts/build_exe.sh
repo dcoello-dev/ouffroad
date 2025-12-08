@@ -19,4 +19,15 @@ echo "🔨 Running PyInstaller..."
 # We run from root so paths in spec file are correct
 uv run pyinstaller packaging/ouffroad.spec --clean --noconfirm
 
-echo "✅ Build complete! Executable is in dist/ouffroad"
+echo "✅ PyInstaller build complete! Executable is in dist/ouffroad"
+
+# 4. Build Electron App
+echo "⚛️ Building Electron App..."
+cd front/electron
+npm ci
+npm run dist
+cd ../..
+
+echo "🎉 All builds complete!"
+echo "   - PyInstaller Binary: dist/ouffroad"
+echo "   - Electron AppImage: front/electron/dist/*.AppImage"

@@ -14,8 +14,14 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   const [drives, setDrives] = useState<{ path: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isElectron, setIsElectron] = useState(false);
 
   useEffect(() => {
+    // Check if running in Electron
+    if ((window as any).electronAPI) {
+      setIsElectron(true);
+    }
+
     const loadDrives = async () => {
       try {
         const systemDrives = await ApiService.getInstance().getSystemDrives();
@@ -44,6 +50,17 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBrowse = async () => {
+    try {
+      const selectedPath = await (window as any).electronAPI.selectRepository();
+      if (selectedPath) {
+        setPath(selectedPath);
+      }
+    } catch (err) {
+      console.error("Failed to browse repository", err);
     }
   };
 
@@ -77,6 +94,16 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
               placeholder="/path/to/your/repository"
               disabled={loading}
             />
+            {isElectron && (
+              <button
+                type="button"
+                onClick={handleBrowse}
+                className="browse-button"
+                disabled={loading}
+              >
+                Browse...
+              </button>
+            )}
           </div>
 
           <div className="actions">
@@ -154,14 +181,26 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
         }
         .input-group {
           margin-bottom: 1.5rem;
+          display: flex;
+          gap: 0.5rem;
         }
         input[type="text"] {
-          width: 100%;
+          flex: 1;
           padding: 0.75rem;
           border: 1px solid #ddd;
           border-radius: 4px;
           font-size: 1rem;
           box-sizing: border-box;
+        }
+        .browse-button {
+          background: #eee;
+          border: 1px solid #ccc;
+          padding: 0 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .browse-button:hover {
+          background: #e0e0e0;
         }
         .actions {
           display: flex;
