@@ -36,21 +36,11 @@ function createWindow() {
 }
 
 function startPythonBackend() {
-    // For Phase 1 (Dev Mode), we assume the python environment is set up
-    // and we run 'python -m ouffroad' from the root
     const rootDir = path.resolve(__dirname, '../../');
-
     console.log('Starting Python backend from:', rootDir);
 
-    // Check for PyInstaller binary first (Phase 2 & 3)
     const binaryName = process.platform === 'win32' ? 'ouffroad.exe' : 'ouffroad';
-
-    // Check in resources (Packaged app)
-    // In packaged app, resources are in process.resourcesPath
-    // We configured extraResources to put it in bin/
     const packagedBinaryPath = path.join(process.resourcesPath, 'bin', binaryName);
-
-    // Check in dist (Dev mode with local binary)
     const devBinaryPath = path.join(rootDir, 'dist', binaryName);
 
     let binaryPath = null;
@@ -62,14 +52,27 @@ function startPythonBackend() {
         console.log('Found dev binary at:', binaryPath);
     }
 
+    // Setup logging
+    const logPath = path.join(app.getPath('userData'), 'ouffroad-backend.log');
+    const logStream = require('fs').createWriteStream(logPath, { flags: 'a' });
+    console.log('Logging Python output to:', logPath);
+
+    // Write a separator
+    logStream.write(`\n\n--- Starting Ouffroad Backend at ${new Date().toISOString()} ---\n`);
+
     if (binaryPath) {
+        // Ensure CWD is valid. In packaged app, rootDir might be inside ASAR or just resources.
+        // Safe bet is resourcesPath or userData.
+        // Let's use resourcesPath as CWD for the binary.
+        const cwd = process.resourcesPath;
+
         pythonProcess = spawn(binaryPath, [], {
-            cwd: rootDir, // This might need adjustment for packaged app, but binary should handle it
-            stdio: 'inherit',
+            cwd: cwd,
+            stdio: ['ignore', 'pipe', 'pipe'], // Pipe stdout/stderr
+            windowsHide: true // Hide console window on Windows
         });
     } else {
         console.log('Binary not found, falling back to python source');
-        // Use the virtual environment python if available, otherwise system python
         const venvPython = path.join(rootDir, '.venv', 'bin', 'python');
         const pythonCmd = require('fs').existsSync(venvPython) ? venvPython : 'python3';
 
@@ -79,17 +82,24 @@ function startPythonBackend() {
                 ...process.env,
                 PYTHONPATH: path.join(rootDir, 'src'),
             },
-            stdio: 'inherit', // Pipe output to console
+            stdio: ['ignore', 'pipe', 'pipe'],
         });
     }
 
-    pythonProcess.on('error', (err) => {
-        console.error('Failed to start Python process:', err);
-    });
+    if (pythonProcess) {
+        pythonProcess.stdout.pipe(logStream);
+        pythonProcess.stderr.pipe(logStream);
 
-    pythonProcess.on('close', (code) => {
-        console.log(`Python process exited with code ${code}`);
-    });
+        pythonProcess.on('error', (err) => {
+            console.error('Failed to start Python process:', err);
+            logStream.write(`Failed to start Python process: ${err}\n`);
+        });
+
+        pythonProcess.on('close', (code) => {
+            console.log(`Python process exited with code ${code}`);
+            logStream.write(`Python process exited with code ${code}\n`);
+        });
+    }
 }
 
 app.on('ready', () => {
