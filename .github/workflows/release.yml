@@ -17,6 +17,7 @@ jobs:
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       version-changed: ${{ steps.check-tag.outputs.changed }}
+      is-major-minor: ${{ steps.check-version-type.outputs.is-major-minor }}
 
     steps:
       - name: Checkout code
@@ -31,6 +32,20 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Found version: $VERSION"
 
+      - name: Check version type
+        id: check-version-type
+        run: |
+          VERSION=${{ steps.get-version.outputs.version }}
+          # Extract the last component (patch version)
+          PATCH=${VERSION##*.}
+          if [ "$PATCH" -eq "0" ]; then
+            echo "Version $VERSION is Major or Minor (patch is 0)"
+            echo "is-major-minor=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION is Patch (patch is $PATCH)"
+            echo "is-major-minor=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Check if tag exists
         id: check-tag
         run: |
@@ -43,8 +58,11 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
+  build-binaries:
+    uses: ./.github/workflows/build_exe.yml
+
   create-release:
-    needs: check-version
+    needs: [check-version, build-binaries]
     if: needs.check-version.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
@@ -81,6 +99,13 @@ jobs:
       - name: Build Python package
         run: |
           python -m build
+
+      - name: Download Binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ouffroad-*
+          path: dist-binaries
+          merge-multiple: true
 
       - name: Generate changelog
         id: changelog
@@ -121,7 +146,7 @@ jobs:
           cat CHANGELOG.md
 
       - name: Create Git tag
-        if: needs.check-version.outputs.version-changed == 'true'
+        if: needs.check-version.outputs.version-changed == 'true' && needs.check-version.outputs.is-major-minor == 'true'
         run: |
           VERSION=${{ needs.check-version.outputs.version }}
           git config user.name "github-actions[bot]"
@@ -130,7 +155,7 @@ jobs:
           git push origin "v$VERSION"
 
       - name: Create GitHub Release
-        if: needs.check-version.outputs.version-changed == 'true'
+        if: needs.check-version.outputs.version-changed == 'true' && needs.check-version.outputs.is-major-minor == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
@@ -141,6 +166,7 @@ jobs:
           files: |
             dist/*.whl
             dist/*.tar.gz
+            dist-binaries/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -152,4 +178,5 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             front/app/dist/
+            dist-binaries/*
           retention-days: 90
