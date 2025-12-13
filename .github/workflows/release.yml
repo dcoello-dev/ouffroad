@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'src/ouffroad/__init__.py'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -44,7 +45,7 @@ jobs:
 
   create-release:
     needs: check-version
-    if: needs.check-version.outputs.version-changed == 'true'
+    if: needs.check-version.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -67,6 +68,10 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: front/app/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: front/app
+        run: npm ci
 
       - name: Install dependencies and project
         run: |
@@ -116,6 +121,7 @@ jobs:
           cat CHANGELOG.md
 
       - name: Create Git tag
+        if: needs.check-version.outputs.version-changed == 'true'
         run: |
           VERSION=${{ needs.check-version.outputs.version }}
           git config user.name "github-actions[bot]"
@@ -124,6 +130,7 @@ jobs:
           git push origin "v$VERSION"
 
       - name: Create GitHub Release
+        if: needs.check-version.outputs.version-changed == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
