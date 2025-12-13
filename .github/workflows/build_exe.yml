@@ -49,6 +49,15 @@ jobs:
         run: |
           uv run pyinstaller packaging/ouffroad.spec --clean --noconfirm
 
+      - name: Install Electron Dependencies
+        working-directory: front/electron
+        run: npm ci
+
+      - name: Build Electron App
+        working-directory: front/electron
+        shell: bash
+        run: npm run dist
+
       - name: Rename Executable (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: mv dist/ouffroad dist/ouffroad-linux
@@ -57,16 +66,27 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: mv dist/ouffroad.exe dist/ouffroad-windows.exe
 
-      - name: Upload Artifact
+      - name: Upload Artifact (Standalone)
         uses: actions/upload-artifact@v4
         with:
-          name: ouffroad-${{ matrix.os }}
+          name: ouffroad-standalone-${{ matrix.os }}
           path: dist/ouffroad-*
+
+      - name: Upload Artifact (Electron)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ouffroad-electron-${{ matrix.os }}
+          path: |
+            front/electron/dist/*.AppImage
+            front/electron/dist/*.exe
 
       - name: Upload to Release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/ouffroad-*
+          files: |
+            dist/ouffroad-*
+            front/electron/dist/*.AppImage
+            front/electron/dist/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
