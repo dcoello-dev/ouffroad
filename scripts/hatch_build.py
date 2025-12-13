@@ -1,4 +1,5 @@
 import os
+import subprocess
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
@@ -10,18 +11,13 @@ class CustomBuildHook(BuildHookInterface):
 
         front_app_dir = os.path.join(self.root, "front", "app")
 
-        # # Check if npm is installed
-        # try:
-        #     subprocess.check_call(["npm", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        # except (subprocess.CalledProcessError, FileNotFoundError):
-        #     print("Warning: npm not found. Skipping frontend build.")
-        #     return
+        # Check if node_modules exists
+        node_modules_path = os.path.join(front_app_dir, "node_modules")
+        if not os.path.exists(node_modules_path):
+            print(f"node_modules not found in {front_app_dir}. Installing dependencies...")
+            # Use shell=True for Windows compatibility if npm is a batch file
+            subprocess.check_call("npm ci", cwd=front_app_dir, shell=True)
 
-        # # Run npm install
-        # print(f"Running npm install in {front_app_dir}...")
-        # subprocess.check_call(["npm", "install"], cwd=front_app_dir, shell=True)
-        os.system(f"cd {front_app_dir} && npm run build")
-
-        # # Run npm run build
-        # print(f"Running npm run build in {front_app_dir}...")
-        # subprocess.check_call(["npm", "run", "build"], cwd=front_app_dir, shell=True)
+        # Run npm run build
+        print(f"Running npm run build in {front_app_dir}...")
+        subprocess.check_call("npm run build", cwd=front_app_dir, shell=True)
