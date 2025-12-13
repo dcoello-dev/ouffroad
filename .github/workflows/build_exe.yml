@@ -1,8 +1,7 @@
 name: Build Standalone Executable
 
 on:
-  release:
-    types: [published]
+  workflow_call:
   workflow_dispatch:
 
 jobs:
