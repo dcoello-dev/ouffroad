@@ -392,6 +392,40 @@ const TreeNodeComponent: React.FC<TreeNodeProps> = ({
                 >
                   ⬇️
                 </a>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (
+                      window.confirm(
+                        `Are you sure you want to delete ${file.filename
+                          .split("/")
+                          .pop()}?`,
+                      )
+                    ) {
+                      try {
+                        await ApiService.getInstance().deleteFile(
+                          file.fullPath,
+                        );
+                        // Refresh file list
+                        window.location.reload();
+                      } catch (error) {
+                        console.error("Error deleting file:", error);
+                        alert("Failed to delete file.");
+                      }
+                    }
+                  }}
+                  title="Delete"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    opacity: 0.6,
+                    padding: "0 5px",
+                    fontSize: "14px",
+                  }}
+                >
+                  🗑️
+                </button>
                 {isMedia && (
                   <>
                     <button
