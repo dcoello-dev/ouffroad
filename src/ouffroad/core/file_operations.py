@@ -151,3 +151,31 @@ def copy_file_with_sidecar(
         if target_sidecar.exists():
             target_sidecar.unlink()
         raise FileOperationError(f"Failed to copy file: {e}") from e
+
+
+def delete_file_with_sidecar(file_path: pathlib.Path) -> None:
+    """
+    Delete a file and its sidecar (if exists).
+
+    Args:
+        file_path: Path to the file to delete
+
+    Raises:
+        FileOperationError: If the operation fails
+        FileNotFoundError: If file doesn't exist
+    """
+    if not file_path.exists():
+        raise FileNotFoundError(f"File does not exist: {file_path}")
+
+    sidecar_path = get_sidecar_path(file_path)
+
+    try:
+        logger.info(f"Deleting file: {file_path}")
+        file_path.unlink()
+
+        if sidecar_path.exists():
+            logger.info(f"Deleting sidecar: {sidecar_path}")
+            sidecar_path.unlink()
+
+    except Exception as e:
+        raise FileOperationError(f"Failed to delete file: {e}") from e

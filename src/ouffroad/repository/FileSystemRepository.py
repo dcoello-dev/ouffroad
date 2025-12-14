@@ -252,3 +252,15 @@ class FileSystemRepository(ITrackRepository):
         logger.info(f"Renamed file: {source_rel_path} -> {new_rel_path}")
 
         return str(new_rel_path).replace(os.sep, "/")
+
+    def delete(self, rel_path: str) -> None:
+        """Delete a file."""
+        from ouffroad.core.file_operations import delete_file_with_sidecar
+
+        # Validate source exists
+        abs_path = self._get_absolute_path(rel_path)
+        if not abs_path.exists():
+            raise FileNotFoundError(f"File not found: {rel_path}")
+
+        delete_file_with_sidecar(abs_path)
+        logger.info(f"Deleted file: {rel_path}")
