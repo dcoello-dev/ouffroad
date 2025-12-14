@@ -5,6 +5,7 @@ from ouffroad.core.IFile import IFile
 from ouffroad.repository.ITrackRepository import ITrackRepository
 from ouffroad.track.TrackFactory import TrackFactory
 from ouffroad.media.MediaFactory import MediaFactory
+from ouffroad.zone.ZoneFactory import ZoneFactory
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,10 @@ class ContentManager:
         # If not a track, try MediaFactory
         if not files:
             files = MediaFactory.create(file_path, content)
+
+        # If not media, try ZoneFactory
+        if not files:
+            files = ZoneFactory.create(file_path, content)
 
         if not files:
             raise ValueError(f"Unsupported file format: {file_path.suffix}")

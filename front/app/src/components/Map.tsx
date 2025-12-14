@@ -225,6 +225,35 @@ const GeoJsonLayer = ({
     );
   }
 
+  // Zone (Polygon)
+  if (file.type === "zone") {
+    return (
+      <GeoJSON
+        data={data}
+        style={{
+          color: getColor(file.category),
+          weight: 2,
+          fillOpacity: 0.3,
+          fillColor: getColor(file.category),
+        }}
+        onEachFeature={(_feature, layer) => {
+          // Try to get name from properties
+          const name =
+            _feature.properties?.name || file.filename.split("/").pop();
+          const description = _feature.properties?.description || "";
+
+          layer.bindPopup(
+            `<div style="text-align: center;">
+              <h4>${name}</h4>
+              <p>${description}</p>
+              <span style="font-size: 0.8em; color: #666;">${file.category}</span>
+            </div>`,
+          );
+        }}
+      />
+    );
+  }
+
   // Track (LineString/MultiLineString)
   return (
     <GeoJSON
@@ -278,6 +307,8 @@ function getColor(category?: string): string {
       return "red";
     case "trail":
       return "gold";
+    case "zones":
+      return "purple";
     default:
       return "blue";
   }

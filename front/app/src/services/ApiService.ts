@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Track, Media } from "../models/File";
+import { Track, Media, Zone } from "../models/File";
 import type { IFile } from "../models/File";
 import type { GeoJsonFeatureCollection } from "../models/GeoJson";
 
@@ -93,6 +93,7 @@ export class ApiService {
       const category = parts[0];
       const isMedia =
         category === "media" || category === "fotos" || category === "videos";
+      const isZone = category === "zones" || path.endsWith(".geojson");
 
       if (isMedia) {
         files.push(
@@ -101,6 +102,15 @@ export class ApiService {
             fullPath: path,
             category,
             type: "media",
+          }),
+        );
+      } else if (isZone) {
+        files.push(
+          new Zone({
+            filename: path,
+            fullPath: path,
+            category,
+            type: "zone",
           }),
         );
       } else {

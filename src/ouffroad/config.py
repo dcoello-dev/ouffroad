@@ -33,7 +33,7 @@ StoragePolicyType = DateBasedPolicyConfig | FlatPolicyConfig | ConfigurablePolic
 
 class CategoryConfig(BaseModel):
     name: str
-    type: Literal["track", "media"]
+    type: Literal["track", "media", "zone"]
     extensions: List[str] = Field(
         default_factory=list
     )  # e.g., [".gpx", ".fit"] or [".jpg", ".mp4"]
@@ -108,6 +108,13 @@ class OuffroadConfig(BaseModel):
                         type="media",
                         extensions=[".jpg", ".jpeg", ".png", ".mp4", ".mov"],
                         color="blue",
+                    ),
+                    "zones": CategoryConfig(
+                        name="zones",
+                        type="zone",
+                        extensions=[".geojson"],
+                        color="purple",
+                        storage_policy=FlatPolicyConfig(),
                     ),
                 }
             )

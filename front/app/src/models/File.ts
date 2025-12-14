@@ -1,7 +1,7 @@
 export interface IFile {
   filename: string;
   fullPath: string;
-  type: "track" | "media";
+  type: "track" | "media" | "zone";
   category?: string;
 }
 
@@ -42,5 +42,22 @@ export class Media implements IFile {
   isVideo(): boolean {
     const ext = this.filename.split(".").pop()?.toLowerCase();
     return ["mp4", "mov", "avi", "mkv"].includes(ext || "");
+  }
+}
+
+export class Zone implements IFile {
+  filename: string;
+  fullPath: string;
+  readonly type = "zone";
+  category?: string;
+
+  constructor(data: IFile) {
+    this.filename = data.filename;
+    this.fullPath = data.fullPath;
+    this.category = data.category;
+  }
+
+  getDisplayName(): string {
+    return this.filename.split("/").pop() || this.filename;
   }
 }

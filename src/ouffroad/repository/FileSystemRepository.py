@@ -119,6 +119,13 @@ class FileSystemRepository(ITrackRepository):
         if result:
             return result
 
+        # Try ZoneFactory
+        from ouffroad.zone.ZoneFactory import ZoneFactory
+
+        result = ZoneFactory.create(abs_path)
+        if result:
+            return result
+
         # Unsupported format
         return []
 
@@ -143,11 +150,10 @@ class FileSystemRepository(ITrackRepository):
                         ".png",
                         ".gif",
                         ".bmp",
-                        ".mp4",
-                        ".mov",
                         ".avi",
                         ".mkv",
                         ".webm",
+                        ".geojson",
                     )
                 ):
                     # Create relative path
