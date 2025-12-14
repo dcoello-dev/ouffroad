@@ -321,3 +321,19 @@ async def update_file(
     except Exception as e:
         logger.exception(f"Error updating file {filepath}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.delete("/file/{filepath:path}")
+async def delete_file(
+    filepath: str,
+    repo: Annotated[FileSystemRepository, Depends(get_repository)],
+):
+    """Delete a file."""
+    try:
+        repo.delete(filepath)
+        return {"message": f"File {filepath} deleted successfully"}
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Error deleting file {filepath}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
