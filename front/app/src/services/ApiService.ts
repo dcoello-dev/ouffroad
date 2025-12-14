@@ -213,6 +213,23 @@ export class ApiService {
       throw error;
     }
   }
+
+  /**
+   * Delete a file
+   */
+  async deleteFile(filepath: string): Promise<void> {
+    try {
+      console.log(`[ApiService] Deleting file: ${filepath}`);
+      await axios.delete(`${this.baseUrl}/file/${filepath}`);
+      console.log(`[ApiService] File deleted: ${filepath}`);
+    } catch (error: unknown) {
+      console.error("[ApiService] Error deleting file:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("[ApiService] Error details:", error.response?.data);
+      }
+      throw error;
+    }
+  }
 }
 
 // TypeScript interfaces for file operations
